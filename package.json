@@ -1,0 +1,18 @@
+{
+  "name": "CHEESEMS",
+  "version": "1.0.0",
+  "description": "Cheese Content Managment System",
+  "main": "server/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Luke Jones",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "express": "~3.4.7",
+    "mysql": "~2.0.0-rc1"
+  },
+  "devDependencies": {
+    "grunt-contrib-symlink": "~0.2.0"
+  }
+}

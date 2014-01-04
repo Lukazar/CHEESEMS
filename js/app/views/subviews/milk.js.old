@@ -1,0 +1,103 @@
+app.view = app.view || {};
+
+app.view.Milk = Backbone.View.extend({
+	
+	template: 'milk',	
+	addMilkRowTemplate: 'milkRow',
+	el: '.sourceContainer',
+	milkNames: [],
+	
+	events: {
+		'click #addMilkRow': 'addMilkRow',
+		'click .removeMilkRow': 'removeMilkRow',
+		'click .addMilk': 'addMilk'
+	},
+	
+	initialize: function(){	
+		this.el = $('.sourceContainer');
+		
+		this.on('milk.save', function(resp){
+			console.log(resp);
+		});						
+	},
+	
+	render: function(){
+		var that = this;
+
+		//display the template		
+		return app.getTemplate(this.template, {}).then(function(_template){
+			return $(that.el).html(_template);
+		});
+	},
+	
+	setupMilks: function(){
+		
+		var that = this;
+		
+		app.milks.each(function(milk){			
+			that.milkNames.push(milk.get('name'));	
+		});
+				
+		$('.autoSource').autocomplete({
+			source: this.milkNames,
+			select: function(e, ui){
+				var model, milk_id;
+				model = _.find(app.milks.models, function(milk){ return milk.get('name') == ui.item.value });				
+				milk_id = model.get('milk_id');
+				
+				$(this).attr('data-idx', milk_id);
+				
+			}
+		});
+	},
+	
+	addMilkRow: function(e){
+		e.preventDefault();
+		
+		var that = this;
+		
+		app.getTemplate(this.addMilkRowTemplate, {}).done(function(_template){
+			var elm = $(_template);
+			$('.sourcesDrop', elm).menu();
+			$('.autoSource', elm).autocomplete({
+				source: that.milkNames,
+				select: function(e, ui){
+					var model, milk_id;
+					model = _.find(app.milks.models, function(milk){ return milk.get('name') == ui.item.value });				
+					milk_id = model.get('milk_id');
+					
+					$(this).attr('data-idx', milk_id);
+					
+				}
+			});		
+			$(that.el).append(elm);
+				
+		});
+	},
+	
+	removeMilkRow: function(e){
+		e.preventDefault();
+		
+		var div = $(e.currentTarget).parent();								
+		div.remove();
+	},
+	
+	addMilk: function(e){
+		e.preventDefault();
+		
+		var milkView = new app.view.MilkModal(), that = this;
+			
+		$.when(milkView.render()).then(function(data){
+			
+			$(data).on('saved.milk', function(e, obj){
+				that.milkNames.push(obj.name);				
+				$('.autoSource', that.$el).val(obj.name).attr('data-idx', obj.milk_id);
+				
+			});
+			
+			$('body').append(data);	
+		});
+		
+	}
+		
+});

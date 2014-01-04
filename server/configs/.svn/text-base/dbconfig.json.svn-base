@@ -1,0 +1,8 @@
+{
+	"host" : "172.16.1.203",
+	"user" : "root",
+	"password" : "io@Universe0",
+	"database" : "rewrite",
+	"port" : 3306,
+	"supportBigNumbers" : true  		
+}

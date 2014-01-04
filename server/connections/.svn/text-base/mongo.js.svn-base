@@ -1,0 +1,15 @@
+var client = require('mongodb').MongoClient,
+	format = require('util').format,
+	config = require('./mongo.json');
+
+module.exports = {
+	fetchConnection: function(){
+		client.connect(config.url, function(err, database){
+			return database;
+		});		
+	},
+	
+	closeConnection: function(database){
+		database.close();	
+	}
+};

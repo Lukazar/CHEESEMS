@@ -1,0 +1,86 @@
+<div class="form">
+	<h2> Contact Form </h2>
+	<form id="contactform">
+		<p class="contact">
+			<label for="name">Name</label>
+		</p>
+		
+		{{#if name}}
+			<input id="name" name="name" placeholder="Source Name" value="{{name}}" required tabindex="1" type="text">
+		{{else}}
+			<input id="name" name="name" placeholder="Source Name" required tabindex="1" type="text">
+		{{/if}}
+		
+		<select id="source" class="select-style source" name="source" tabindex="2">
+			<option value="select">Choose Source Type</option>
+			{{#if milk}}
+				<option selected="selected" value="1">Milk</option>
+			{{else}}
+				<option value="1">Milk</option>
+			{{/if}}
+			
+			<!--<option value="2">Rennent</option>
+			<option value="3">Culture</option>-->
+		</select>
+		
+		
+		<p class="contact">
+			<label for="cname">Contact Name</label>
+		</p>
+		
+		{{#if fullname}}
+			<input id="cname" name="cname" placeholder="First and Last Name" value="{{fullname}}" required tabindex="3" type="text">
+		{{else}}
+			<input id="cname" name="cname" placeholder="First and Last Name" required tabindex="3" type="text">
+		{{/if}}
+		
+		
+		<p class="contact">
+			<label for="phone">Phone Number</label>
+		</p>
+		{{#if phone}}
+			<input id="phone_start" class="autotab" name=phone" placeholder="XXX" value="{{pstart}}" required tabindex="4" maxlength="3" type="text">-
+			<input id="phone_mid" class="autotab" name=phone" placeholder="XXX" value="{{pmid}}" required tabindex="5" maxlength="3" type="text">-
+			<input id="phone_end" name=phone" placeholder="XXXX" value="{{pend}}" required tabindex="6" maxlength="4" type="text">
+		{{else}}
+			<input id="phone_start" class="autotab" name=phone" placeholder="XXX" required tabindex="4" maxlength="3" type="text">-
+			<input id="phone_mid" class="autotab" name=phone" placeholder="XXX" required tabindex="5" maxlength="3" type="text">-
+			<input id="phone_end" name=phone" placeholder="XXXX" required tabindex="6" maxlength="4" type="text">
+		{{/if}}
+		
+		<p class="contact">
+			<label for="email">E-Mail Address</label>
+		</p>
+		{{#if email}}
+			<input id="email" name="email" placeholder="example@domain.com" value="{{email}}" required tabindex="7" type="text">
+		{{else}}
+			<input id="email" name="email" placeholder="example@domain.com" required tabindex="7" type="text">
+		{{/if}}
+		
+		<p class="contact">
+			<label for="address">Address</label>
+		</p>
+		{{#if address}}
+			<input id="address" name="address" placeholder="Address" value="{{address}}" required tabindex="8" type="text">
+		{{else}}
+			<input id="address" name="address" placeholder="Address" required tabindex="8" type="text">
+		{{/if}}
+		
+		<p class="contact">
+			<label for="notes">Notes</label>
+		</p>
+		{{#if notes}}
+			<textarea id="notes" name="notes" placeholder="Additional Notes (optional)" required tabindex="9" type="text">{{notes}}</textarea>
+		{{else}}
+			<textarea id="notes" name="notes" placeholder="Additional Notes (optional)" required tabindex="9" type="text"></textarea>
+		{{/if}}
+		
+	</form>
+	
+	{{#if update}}
+		<button id="update" title="Save the source contact info" tabindex="10">Update</button>
+	{{else}}
+		<button id="save" title="Save the source contact info" tabindex="10">Save</button>
+	{{/if}}		
+	<button id="clear" title="Clear the form" tabindex="11">Clear</button>
+</div>

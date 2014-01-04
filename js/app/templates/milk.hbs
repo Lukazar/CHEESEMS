@@ -1,0 +1,29 @@
+<div class="form">
+	<h2> Arrival Details </h2>
+	<form id="contactform">		
+		<select id="source" class="select-style source" name="source" tabindex="1">
+			<option value="select">Choose Source</option>
+			{{#each array}}
+				<option value="{{this}}">{{this}}</option>
+			{{/each}}
+		</select>		
+		<p class="contact">
+			<label for="date">Arrival Time</label>
+		</p>
+		<input id="date" name="date" placeholder="Select Day" required tabindex="2" type="text">		
+		<p class="contact">
+			<label for="temp">Temperature</label>
+		</p>		
+		<input id="temp" name="temp" placeholder="Temp" required tabindex="3" type="text">
+		<p class="contact">
+			<label for="amount">Amount</label>
+		</p>
+		<input id="amount" name="amount" placeholder="Amount" required tabindex="4" type="text">		
+		<p class="contact">
+			<label for="notes">Notes</label>
+		</p>
+		<textarea id="notes" name="notes" placeholder="Additional Notes (optional)" required tabindex="5" type="text"></textarea>
+	</form>
+	<button id="save" title="Save the source contact info" tabindex="6">Save</button>
+	<button id="clear" title="Clear the form" tabindex="7">Clear</button>
+</div>
