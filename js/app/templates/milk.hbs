@@ -1,29 +1,98 @@
 <div class="form">
 	<h2> Arrival Details </h2>
 	<form id="contactform">		
-		<select id="source" class="select-style source" name="source" tabindex="1">
+		<select id="source" class="select-style source validate" name="source" tabindex="1">
 			<option value="select">Choose Source</option>
-			{{#each array}}
-				<option value="{{this}}">{{this}}</option>
+			{{#each objects}}
+				{{#if selected}}
+					<option selected value="{{value}}">{{key}}</option>
+				{{else}}
+					<option value="{{value}}">{{key}}</option>
+				{{/if}}
 			{{/each}}
-		</select>		
+		</select>
+				
 		<p class="contact">
 			<label for="date">Arrival Time</label>
 		</p>
-		<input id="date" name="date" placeholder="Select Day" required tabindex="2" type="text">		
+		
+		{{#if data.date}}
+			<input class="validate" id="date" value="{{data.date}}" name="date" placeholder="Select Day" required tabindex="2" type="datetime" readonly="readonly">
+		{{else}}
+			<input class="validate" id="date" name="date" placeholder="Select Day" required tabindex="2" type="datetime" readonly="readonly">
+		{{/if}}		
+				
 		<p class="contact">
-			<label for="temp">Temperature</label>
-		</p>		
-		<input id="temp" name="temp" placeholder="Temp" required tabindex="3" type="text">
+			<label for="temp">Temperature (F)</label>
+		</p>	
+		
+		{{#if data.temp}}
+			<input class="validate" id="temp" value="{{data.temp}}" name="temp" placeholder="Temp" required tabindex="3" type="number">
+		{{else}}	
+			<input class="validate" id="temp" name="temp" placeholder="Temp" required tabindex="3" type="number">
+		{{/if}}
+				
 		<p class="contact">
-			<label for="amount">Amount</label>
+			<label for="amount">Amount (Gal)</label>
+			<label class="raw_align" for="raw">Raw (Gal)</label>
 		</p>
-		<input id="amount" name="amount" placeholder="Amount" required tabindex="4" type="text">		
+		
+		{{#if data.amount}}
+			<input class="validate" id="amount" value="{{data.amount}}" name="amount" placeholder="Amount" required tabindex="4" type="number">
+		{{else}}
+			<input class="validate" id="amount" name="amount" placeholder="Amount" required tabindex="4" type="number">
+		{{/if}}
+		
+		{{#if data.raw}}
+			<input class="validate" id="raw" value="{{data.raw}}" name="raw" placeholder="Raw" required tabindex="4" type="number">
+		{{else}}
+			<input class="validate" id="raw" name="raw" placeholder="Raw" value="0" required tabindex="4" type="number">
+		{{/if}}
+		
+		<p class="contact">
+			<label for="price">Price</label>
+		</p>
+		
+		{{#if data.price}}
+			<input class="validate" id="price" value="{{data.price}}" name="price" placeholder="Prices" required tabindex="4" type="number">
+		{{else}}
+			<input class="validate" id="price" name="price" placeholder="Prices" required tabindex="4" type="number">
+		{{/if}}
+		
+		<p class="contact">
+			<label for="haccp">HACCP Compliant</label>
+		</p>
+		
+		{{#if data.haccp}}
+			<input class="validate" id="haccp" type="checkbox" name="haccp" value="true" checked>HACCP
+		{{else}}
+			<input class="validate" id="haccp" type="checkbox" name="haccp" value="true">HACCP
+		{{/if}}
+		
+		{{#if data.initials}}
+			<input class="validate" id="initials" value="{{data.initials}}" name="haccp" placeholder="Initials" required tabindex="5" type="text" maxlength="2" size="2">
+		{{else}}
+			<input class="validate" id="initials" name="haccp" placeholder="Initials" required tabindex="5" type="text" maxlength="2" size="2">
+		{{/if}}
+				
 		<p class="contact">
 			<label for="notes">Notes</label>
 		</p>
-		<textarea id="notes" name="notes" placeholder="Additional Notes (optional)" required tabindex="5" type="text"></textarea>
+		
+		{{#if data.notes}}
+			<textarea id="notes" name="notes" placeholder="Additional Notes (optional)" required tabindex="6" type="text">{{data.notes}}</textarea>
+		{{else}}
+			<textarea id="notes" name="notes" placeholder="Additional Notes (optional)" required tabindex="6" type="text"></textarea>
+		{{/if}}
+		
 	</form>
-	<button id="save" title="Save the source contact info" tabindex="6">Save</button>
-	<button id="clear" title="Clear the form" tabindex="7">Clear</button>
+	
+	{{#if data.updated}}
+		<button id="update_milk" title="Update the arrival info" tabindex="7">Update</button>
+		<button id="delete_milk" title="Delete the arrival info" tabindex="8">Delete</button>
+	{{else}}
+		<button id="save_milk" title="Save the arrival info" tabindex="7">Save</button>
+	{{/if}}
+	
+	<button id="clear_milk" title="Clear the form" tabindex="8">Clear</button>
 </div>

@@ -3,6 +3,7 @@
 
 module.exports = function(app){
   require("./database/sources")(app);
+  require("./database/arrivals")(app);
 	require("./database/milks")(app);
 	require("./database/cheese_types")(app);
 	require("./database/cultures")(app);

@@ -71,9 +71,7 @@ module.exports = {
 		  
 		  qstr = 'UPDATE sources SET name = ?, fullname = ?, type = ?, phone = ?, email = ?, address = ?, notes = ? WHERE source_id = ?';
 		  
-		  console.log(params);
-		  
-		  connection.query(qstr, [params.name, params.fullname, params.type, params.phone, params.email, params.address, params.notes, params.source_id], function(err, result) {
+		  connection.query(qstr, [params.name, params.fullname, params.type, params.phone, params.email, params.address, params.notes, params.source_id], function(err, result) {		    
 		    if(err){
 		      callback({success:false, error: err}, null);
 		    } else {
@@ -82,6 +80,22 @@ module.exports = {
 		  });
 		  
 		  mysql.closeConnection(connection);
+		},
+		
+		deleteSourceBySourceID: function(source_id, callback){
+		  var connection = mysql.fetchConnection(), qstr;
+      
+      qstr = 'DELETE FROM sources WHERE source_id = ?';
+      
+      connection.query(qstr, [source_id], function(err, result) {       
+        if(err){
+          callback({success:false, error: err}, null);
+        } else {
+          callback(null, {success:true});
+        }
+      });
+      
+      mysql.closeConnection(connection);
 		}
 	},
 };

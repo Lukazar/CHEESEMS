@@ -6,61 +6,55 @@ app.view.Source = Backbone.View.extend({
   el: $('#wrapper'),
   options: {},
   source: null,
+  model: null,
 
   events: {
     'click #clear': 'clear',
     'click #save': 'save',
+    'click #delete': 'delete',
     'click #update': 'update',
     'keyup .autotab': 'jump',
   },
 
   initialize: function(options) {
 
-    this.options = options;
-
-    // render the page
-    this.render();
+    this.options = options || {};
+    
+    if(this.options.id){
+      this.model = new app.model.Source(options.id);
+      this.listenToOnce(this.model, 'change', this.render);
+    } else {
+      this.render({attributes:{result:[]}});      
+    }
   },
 
-  render: function() {
+  render: function(resp) {
 
-    var that = this;
+    var that = this, attr = resp.attributes;
 
-    if (this.options) {
-      this.source = new app.model.Source(this.options.id,
-              function(err, results) {
-                if (err) {
-                  console.log(err);
-                } else {
+    if (!!attr.result.length) {
 
-                  if (!!results.length) {
+      // get the object
+      var data = attr.result.pop();
 
-                    // get the object
-                    var data = results.pop();
+      data.update = true;
 
-                    data.update = true;
+      switch (data.type) {
+      case 1:
+        data.milk = true;
+        break;
+      }
 
-                    switch (data.type) {
-                    case 1:
-                      data.milk = true;
-                      break;
-                    }
-                    
-                    if(data.phone.length == 10){ 
-                      data.pstart = data.phone.substring(0,3);
-                      data.pmid = data.phone.substring(3,6);
-                      data.pend = data.phone.substring(6,10);
-                    } else {
-                      data.phone = false;
-                    }
+      if (data.phone.length == 10) {
+        data.pstart = data.phone.substring(0, 3);
+        data.pmid = data.phone.substring(3, 6);
+        data.pend = data.phone.substring(6, 10);
+      } else {
+        data.phone = false;
+      }
 
-                    that.display(data);
+      that.display(data);
 
-                  } else {
-                    that.display({});
-                  }
-                }
-              });
     } else {
       this.display({});
     }
@@ -106,6 +100,46 @@ app.view.Source = Backbone.View.extend({
   save: function(e) {
     e.preventDefault();
 
+    var that = this, input = {}, model, valid = true;
+
+    $.each($('.validate'), function(i,v){
+      if($(v).hasClass('invalid')){        
+        valid = false;
+        return false;
+      }
+      
+      if(v.attributes.hasOwnProperty('required') && !$(v).hasClass('valid') && $(v).val() == ""){
+        valid = false;
+        return false;
+      }
+    });
+    
+    if(valid){    
+      input.name = $('#name').val();
+      input.fullname = $('#cname').val();
+      input.source = $('#source').val();
+      input.phone = $('#phone_start').val() + $('#phone_mid').val()
+              + $('#phone_end').val();
+      input.email = $('#email').val();
+      input.address = $('#address').val();
+      input.notes = $('#notes').val();
+  
+      model = app.sources.create(input, {
+        error: function(){
+          //some event here for error
+        },
+        success: function() {
+          //some event here for save
+        }
+      });    
+    } else {
+      console.log('Errors in input');
+    }
+  },
+
+  update: function(e) {
+    e.preventDefault();
+
     var that = this, input = {}, model;
 
     input.name = $('#name').val();
@@ -117,28 +151,23 @@ app.view.Source = Backbone.View.extend({
     input.address = $('#address').val();
     input.notes = $('#notes').val();
 
-    model = app.sources.create(input, {
+    this.model.save(input, {
+      error: function() {
+        //some error handling here
+      },
       success: function() {
-        window.history.back();
+        //some event here for updating
       }
     });
   },
   
-  update: function(e){
+  delete: function(e){
     e.preventDefault();
     
-    var that = this, input = {}, model;
+    if (confirm('Are you sure you want to delete this source?  This operation cannot be undone')){
+      this.model.destroy();
+    }
     
-    input.name = $('#name').val();
-    input.fullname = $('#cname').val();
-    input.source = parseInt($('#source').val());
-    input.phone = $('#phone_start').val() + $('#phone_mid').val()
-            + $('#phone_end').val();
-    input.email = $('#email').val();
-    input.address = $('#address').val();
-    input.notes = $('#notes').val();
-   
-    this.source.save(input);
   }
 
 });

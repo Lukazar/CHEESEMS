@@ -15,7 +15,7 @@ app.view.Sources = Backbone.View.extend({
     app.sources.fetch({
       reset: true
     });
-    this.listenTo(app.sources, 'reset', this.render);
+    this.listenToOnce(app.sources, 'reset', this.render);
   },
 
   render: function() {
@@ -44,9 +44,11 @@ app.view.Sources = Backbone.View.extend({
         'aaData': values,
         'aoColumns': columns
       });
-
+      
       // set our button styles
       $('button').button();
+      
+      that.$el.addClass('notable');
 
     });
   },

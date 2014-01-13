@@ -1,56 +1,112 @@
-/*! cheese.js - v1.0.0 - 2014-01-03
+/*! cheese.js - v1.0.0 - 2014-01-12
 * http://lukejones.com/
 * Copyright (c) 2014 Luke Jones; Licensed MIT */
 var app = app || {};
+var helper = helper || {};
 app.router = app.router || {};
 
 app.router.Router = Backbone.Router.extend({
+  view: null,
   routes: {
-    '': 'home',    
+    '': 'home',
     'inventory': 'inventory',
     'sources': 'sources',
     'source': 'source',
-    'source/:id': 'source',    
-    'arrival': 'arrival',
+    'source/:id': 'source',
+    'arrivals': 'arrivals',
+    'batch': 'batch',
     'createBatch': 'createBatch',
-    'viewBatches': 'viewBatches'
+    'viewBatches': 'viewBatches',
+    '*path': 'home'
   },
 
   home: function() {
-    new app.view.Home();
+
+    if (this.view) {
+      this.destroyView();
+    }
+
+    this.view = new app.view.Home();
   },
 
   inventory: function() {
-    new app.view.Inventory();
-    
-    app.menu.context({id: 'invMgmt', name: 'Inventory Management'});
+
+    if (this.view) {
+      this.destroyView();
+    }
+
+    this.view = new app.view.Inventory();
+
+    //app.menu.context({
+    //  id: 'invMgmt',
+    //  name: 'Inventory Management'
+    //});
   },
-  
+
   sources: function() {
-    new app.view.Sources();
-    
-    app.menu.context({id: 'sources', name: 'Sources List'});
+
+    if (this.view) {
+      this.destroyView();
+    }
+
+    this.view = new app.view.Sources();
+
+    //app.menu.context({
+    //  id: 'sourcelist',
+    //  name: 'Sources List'
+    //});
   },
-  
-  source: function(source_id){
-    
+
+  source: function(source_id) {
+
+    if (this.view) {
+      this.destroyView();
+    }
+
     var name = 'Source';
-    
-    if(source_id){
-      new app.view.Source({id:source_id});
+
+    if (source_id) {
+      this.view = new app.view.Source({
+        id: source_id
+      });
       name = 'Edit ' + name;
     } else {
-      new app.view.Source();  
+      this.view = new app.view.Source();
       name = 'Add ' + name;
-    }        
-    
-    app.menu.context({id: 'source', name: 'Add Source'});
+    }
+
+    //app.menu.context({
+    //  id: 'addsource',
+    //  name: 'Add Source'
+    //});
   },
-  
-  arrival: function(){
-    new app.view.Arrival();
-    
-    app.menu.context({id: 'arrival', name: 'Arrivals'});
+
+  arrivals: function() {
+
+    if (this.view) {
+      this.destroyView();
+    }
+
+    this.view = new app.view.Arrivals();
+
+    //app.menu.context({
+    //  id: 'arrival',
+    //  name: 'Arrivals'
+    //});
+  },
+
+  batch: function() {
+
+    if (this.view) {
+      this.destroyView();
+    }
+
+    this.view = new app.view.Batch();
+
+    //app.menu.context({
+    //  id: 'batch',
+    //  name: 'Batch Creation'
+    //});
   },
 
   createBatch: function() {
@@ -59,6 +115,33 @@ app.router.Router = Backbone.Router.extend({
 
   viewBatches: function() {
     new app.BatchListingView();
+  },
+
+  destroyView: function() {
+
+    // COMPLETELY UNBIND THE VIEW
+    this.view.undelegateEvents();
+
+    $(this.view.el).removeData().unbind();
+
+    // Remove view from DOM
+    this.view.$el.children().remove()    
+
+    this.view = null;
+
+  }
+});
+app.model = app.model || {};
+
+app.model.Arrival = Backbone.Model.extend({  
+  idAttribute: 'result',
+
+  initialize: function(id) {
+
+    if (typeof id !== 'undefined' && typeof id !== 'object') {
+      this.urlRoot = '/api/arrivals/' + id;
+      return this.fetch();
+    }
   }
 });
 app.model = app.model || {};
@@ -72,7 +155,7 @@ app.model.Batch = Backbone.Model.extend({
 		
 	url: '/api/batches',
 	initialize: function(id){
-		if(typeof id !== 'undefined'){
+		if(typeof id !== 'undefined' && typeof id !== 'object'){
 			this.urlRoot = '/api/batches/' + id;			
 			return this.fetch();
 		}
@@ -125,12 +208,17 @@ app.model.Culture = Backbone.Model.extend({
 });
 app.model = app.model || {};
 
-app.model.Milk = Backbone.Model.extend({
-	defaults:{		
-		name: 'milk name',		 
-		description: ''		
-	},
+app.model.Milk = Backbone.Model.extend({	
 	idAttribute: 'result',	
+	
+	initialize: function(id) {
+
+    if (typeof id !== 'undefined' && typeof id !== 'object') {
+      this.urlRoot = '/api/milks/' + id;
+      return this.fetch();
+    }
+  }
+	
 });
 app.model = app.model || {};
 
@@ -146,25 +234,29 @@ app.model.Source = Backbone.Model.extend({
   defaults: {},
   idAttribute: 'result',
 
-  initialize: function(id, callback) {
+  initialize: function(id) {
 
-    this.callback = callback;
-
-    if (typeof id !== 'undefined') {
+    if (typeof id !== 'undefined' && typeof id !== 'object') {
       this.urlRoot = '/api/sources/' + id;
       return this.fetch();
     }
-  },
+  }
+});
+app.collection = app.collection || {};
 
-  parse: function(resp) {
-    if (resp.success) {
-      this.callback(null, resp.result);
+app.collection.Arrivals = Backbone.Collection.extend({
+  model: app.model.Arrival,
+  url: '/api/arrivals',
+  
+  parse: function(resp){
+    if(resp.success){     
+      return resp.result; 
     } else {
-      this.callback(resp.result, null);
+      console.log('error with fetch sources collection');
     }
   }
+})
 
-});
 app.collection = app.collection || {};
 
 app.collection.Batches = Backbone.Collection.extend({
@@ -259,25 +351,134 @@ app.collection = app.collection || {};
 
 app.collection.Sources = Backbone.Collection.extend({
   model: app.model.Source,
-  url: '/api/sources'
+  url: '/api/sources',
+  
+  parse: function(resp){
+    if(resp.success){     
+      return resp.result; 
+    } else {
+      console.log('error with fetch sources collection');
+    }
+  }
 })
 
 app.view = app.view || {};
 
-app.view.Arrival = Backbone.View.extend({
+app.view.Arrivals = Backbone.View.extend({
 
-  template: 'arrival',
+  template: 'arrivals',
   milk_tmpl: 'milk',
   el: $('#wrapper'),
 
   events: { 
-    'click #milk': 'milk',    
+    'click #milk': 'milk',  
+    'click table.display tr': 'edit'
+  },
+
+  initialize: function() {
+
+    app.arrivals.fetch({
+      reset: true
+    });
+    this.listenToOnce(app.arrivals, 'reset', this.render);
+  },
+
+  render: function() {
+
+    var that = this, columns = [], values = [];
+
+    app.arrivals.each(function(arrival, idx) {
+      var row = [];
+      $.each(arrival.attributes, function(i, v) {
+        if (idx == 0) {
+          columns.push({
+            "sTitle": i
+          });
+        }
+        row.push(v);
+      });
+      values.push(row);
+    });
+
+    // display the template
+    app.getTemplate(this.template, {}).done(function(_template) {
+      $(that.el).html(_template);
+
+      $('#table_wrapper').dataTable({
+        "bJQueryUI": true,
+        "sPaginationType": "full_numbers",
+        'aaData': values,
+        'aoColumns': columns
+      });
+      
+      // set our tooltips
+      $(document).tooltip();
+
+      // set our button styles
+      $('button').button();    
+      
+      that.$el.addClass('notable');
+    });
+  },
+  
+  milk: function(e, arrival_id){
+    e.preventDefault();
+    
+    var elm = $(e.currentTarget), that = this;
+    
+    if(!elm.hasClass('disabled')){
+      
+      var options = {}
+      options.append = false;
+      if(arrival_id){
+        options.id = arrival_id;
+      }
+      
+      new app.view.Milk(options);      
+      elm.addClass('disabled');      
+    }    
+          
+  },
+  
+  edit: function(e){
+    e.preventDefault();
+    
+    var arrival_id = parseInt($(e.currentTarget).find('td').eq(0).html()), type = parseInt($(e.currentTarget).find('td').eq(2).html());
+    
+    switch(type){
+      case 1:
+        this.milk(e, arrival_id);
+        app.router.inst.navigate("milk", {trigger: false, replace: true});
+        break;      
+    }        
+  }
+});
+
+app.view = app.view || {};
+
+app.view.Batch = Backbone.View.extend({
+
+  template: 'batch',
+  row_tmpl: 'source_row',
+  el: $('#wrapper'),
+  $current: null,
+  count: 0,
+  names: [],
+  lookup: {},
+
+  events: {
+    'click #add_cheese': 'add',
+    'click #save_batch': 'save',
+    'click .plus': 'plus'    
   },
 
   initialize: function() {
 
     // render the page
-    this.render();
+    app.milks.fetch({
+      reset: true
+    });
+    this.listenToOnce(app.milks, 'reset', this.render);
   },
 
   render: function() {
@@ -285,28 +486,71 @@ app.view.Arrival = Backbone.View.extend({
     var that = this;
 
     // display the template
-    app.getTemplate(this.template, {}).done(function(_template) {
+    app.getTemplate(this.template, {idx:this.count}).done(function(_template) {
+      
+      that.count += 1;
+      
       $(that.el).html(_template);
 
-      // set our tooltips
-      $(document).tooltip();
-
-      // set our button styles
+      // apply the button UI button style
       $('button').button();
+      $('#date').datetimepicker();
+
+      app.milks.each(function(milk, idx) {        
+        if(!_.contains(that.names, milk.attributes.name)){        
+          that.names.push(milk.attributes.name);
+          that.lookup[milk.attributes.name] = parseInt(milk.attributes.amount);
+        }
+      });
+
+      that.auto();
+      
+      that.$el.addClass('notable');
+
     });
   },
   
-  milk: function(e){
+  add: function(e){
     e.preventDefault();
     
-    var elm = $(e.currentTarget), that = this;
+    var that = this;        
+    new app.view.Cheese();                    
+  },
+
+  plus: function(e) {
+    e.preventDefault();
     
-    if(!elm.hasClass('disabled')){
-      new app.view.Milk({append:true});      
-      elm.addClass('disabled');      
-    }    
-          
+    var that = this;
+    
+    app.getTemplate(this.row_tmpl, {idx: this.count}).done(function(_template) {
+      that.count += 1;
+      
+      $('#bottom').before(_template);
+      that.auto();
+                  
+    });
+  },
+  
+  auto: function(){
+    
+    var that = this, total = 0;
+    
+    $('.source').not('.ui-autocomplete-input').autocomplete({
+      source: that.names,
+      change: function(e, ui){
+        var id = $(this).attr('id').split('-').pop();
+        
+        if($(this).val()){
+          $('#volumes-' + id).val(that.lookup[ui.item.value]);
+          $('#volumes-' + id).data('max', that.lookup[ui.item.value]);
+        } else {
+          $('#volumes-' + id).val('');
+        }
+        
+      }
+    });
   }
+  
 });
 
 app.BatchListingView = Backbone.View.extend({
@@ -552,233 +796,83 @@ app.view.CreateBatch = Backbone.View.extend({
 	}		
 });
 
-var app = app || {};
+app.view = app.view || {};
 
 app.view.Cheese = Backbone.View.extend({
-	
-	template: 'cheese',
-	rennentTmpl: 'rennentRow',
-	cultureTmpl: 'cultureRow',
-	tagName: 'li',
-	cheeseTypeNames: [],
-	rennentNames: [],
-	cultureNames: [],	
-	
-	events:{
-		'click .deleteCheese': 'deleteCheese',		
-		'click .createRennent': 'createRennent',
-		'click .createCulture': 'createCulture',
-		'click .addRennent': 'addRennent',
-		'click .addCulture': 'addCulture',
-		'click .removeRennent': 'removeRennent',
-		'click .removeCulture': 'removeCulture',
-		//'click .addCheeseName': 'addCheeseName',
-		'click .addCheeseType': 'addCheeseType',		
-	},
-	
-	initialize: function(){								
-	},
-	
-	render: function(options){
-		
-		var that = this;
-		
-		//display the template		
-		return app.getTemplate(this.template, {}).then(function(_template){
-			return $(that.el).html(_template);
-		});
-	},
-	
-	setupCheeseTypes: function(skip){
-		var that = this;		
-		
-		if(this.cheeseTypeNames.length == 0){
-			app.cheeseTypes.each(function(milk){
-				that.cheeseTypeNames.push(milk.get('name'));	
-			});		
-		}
-									
-		$('.cheeseType', this.$el).autocomplete({
-			source: this.cheeseTypeNames,
-			select: function(e, ui){
-				var model, type_id;
-				model = _.find(app.cheeseTypes.models, function(type){ return type.get('name') == ui.item.value });				
-				type_id = model.get('type_id');
-				
-				$(this).attr('data-idx', type_id);
-				
-			}
-		});
-	},
-	
-	setupRennents: function(skip){
-		var that = this;		
-		
-		if(this.rennentNames.length == 0){
-			app.rennents.each(function(milk){
-				that.rennentNames.push(milk.get('name'));	
-			});
-		}	
-							
-		$('.cheeseRennent', this.$el).autocomplete({
-			source: this.rennentNames,
-			select: function(e, ui){
-				var model, rennent_id;
-				model = _.find(app.rennents.models, function(rennent){ return rennent.get('name') == ui.item.value });				
-				rennent_id = model.get('rennent_id');
-				
-				$(this).attr('data-idx', rennent_id);			
-			}
-			
-		});
-	},
-	
-	setupCultures: function(skip){
-		var that = this;
-		
-		if(this.cultureNames.length == 0){
-			app.cultures.each(function(milk){
-				that.cultureNames.push(milk.get('name'));	
-			});
-		}		
-				
-		$('.cheeseCulture', this.$el).autocomplete({
-			source: this.cultureNames,
-			select: function(e, ui){
-				var model, culture_id;
-				model = _.find(app.cultures.models, function(culture){ return culture.get('name') == ui.item.value });				
-				culture_id = model.get('culture_id');
-				
-				$(this).attr('data-idx', culture_id);			
-			}
-		});
-	},
-	
-	createRennent: function(e){
-		e.preventDefault();
-		
-		var rennentView = new app.view.RennentModal(), that = this;
-			
-		$.when(rennentView.render()).then(function(data){
-			
-			$(data).on('saved.rennent', function(e, obj){
-				$('.cheeseRennent', that.$el).val(obj.name).attr('data-idx', obj.milk_id);							
-			});
-			
-			$('body').append(data);	
-		});		
-	},
-	
-	createCulture: function(e){
-		e.preventDefault();
-		
-		var cultureView = new app.view.CultureModal(), that = this;
-			
-		$.when(cultureView.render()).then(function(data){
-			
-			$(data).on('saved.culture', function(e, obj){
-				that.cultureNames.push(obj.name);							
-				$('.cheeseCulture', that.$el).val(obj.name).attr('data-idx', obj.milk_id);
-			});
-			
-			$('body').append(data);	
-		});		
-	},
-	
-	addCulture: function(e){
-		e.preventDefault();
-		
-		var div = $(e.currentTarget).parents('.cheeseDrop').siblings('.cultureWrapper'), that = this;
-		
-		app.getTemplate(this.cultureTmpl, {}).done(function(_template){
-			var elm = $(_template);
-			
-			$('.cheeseCulture', elm).autocomplete({
-			source: that.cultureNames,
-			select: function(e, ui){
-				var model, culture_id;
-				model = _.find(app.cultures.models, function(culture){ return culture.get('name') == ui.item.value });				
-				culture_id = model.get('culture_id');
-				
-				$(this).attr('data-idx', culture_id);			
-			}
-		});
-					
-			div.append(elm);							
-		});				
-	},
-	
-	addRennent: function(e){
-		e.preventDefault();
-		
-		var div = $(e.currentTarget).parents('.cheeseDrop').siblings('.rennentWrapper'), that = this;	
-		
-		app.getTemplate(this.rennentTmpl, {}).done(function(_template){
-			var elm = $(_template);
-			
-			$('.cheeseRennent', elm).autocomplete({
-				source: that.rennentNames,
-				select: function(e, ui){
-					var model, rennent_id;
-					model = _.find(app.rennents.models, function(rennent){ return rennent.get('name') == ui.item.value });				
-					rennent_id = model.get('rennent_id');
-					
-					$(this).attr('data-idx', rennent_id);			
-				}
-			});	
-					
-			div.append(elm);
-				
-		});		
-	},
-	
-	removeRennent: function(e){
-		e.preventDefault();
-		
-		var div = $(e.currentTarget).parent();
-		div.remove();
-	},
-	
-	removeCulture: function(e){
-		e.preventDefault();
-		
-		var div = $(e.currentTarget).parent();
-		div.remove();
-		
-	},
-	
-	addCheeseName: function(e){
-		e.preventDefault();
-		
-		var cheeseNameView = new app.view.CheeseNameModal();
-			
-		$.when(cheeseNameView.render()).then(function(data){
-			$('body').append(data);	
-		});		
-	},
-	
-	addCheeseType: function(e){
-		e.preventDefault();
-		
-		var cheeseTypeView = new app.view.CheeseTypeModal(), that = this;
-			
-		$.when(cheeseTypeView.render()).then(function(data){
-			
-			$(data).on('saved.type', function(e, obj){
-				that.cheeseTypeNames.push(obj.name);				
-				$('.cheeseType', that.$el).val(obj.name).attr('data-idx', obj.milk_id);				
-			});
-			
-			$('body').append(data);	
-		});
-	},
-	
-	deleteCheese: function(e){
-		e.preventDefault();
-				
-		//this.model.destroy();
-		this.remove();
-	}	
+
+  template: 'cheese',
+  tagName: 'li',
+  options: {},
+  model: null,
+
+  events: {
+    'change .cheeseSource': 'change',
+    'keyup .cheeseSource': 'change'
+  },
+
+  initialize: function() {
+    
+    this.max = parseInt($('#total').val());
+    
+    this.render();
+  },
+
+  render: function() {
+    
+    var that = this, data = [];
+    
+    $.each($('.source'), function(i,v){
+      var obj = {};
+      obj.idx = i;
+      obj.name = $(v).val();
+      data.push(obj);
+    });
+    
+    app.getTemplate(this.template, {sources:data}).done(function(_template) {
+      that.$el.html(_template);
+      $('#cheeseBlock').append(that.el);
+    });
+  },
+  
+  change: function(e){
+    e.preventDefault();
+    
+    var elm = $(e.currentTarget), input = 0, total, id = parseInt(elm.attr('id')), max = parseInt($('#volumes-' + id).data('max'));
+    
+    $.each($('.cheese' + id), function(i,v){
+      input += parseInt($(v).val());
+    });
+    
+    if(parseInt(input) > 0){
+      
+      total = max - input;  
+      
+      if(total < 0){
+        console.log('Not enough milk');
+      } else {
+        $('#volumes-' + id).val(total);        
+      }
+      
+    } else {
+      console.log('Cannot have negative amount of milk')
+    }    
+  },
+
+  clear: function(e) {
+    
+  },
+  
+  update: function(e){
+    
+  },
+  
+  delete: function(e){
+    e.preventDefault();
+    
+    if (confirm('Are you sure you want to delete this cheese?  This operation cannot be undone')){
+      this.model.destroy();
+    }
+  }
 });
 
 app.view = app.view || {};
@@ -859,11 +953,14 @@ app.view.Home = Backbone.View.extend({
   el: $('#wrapper'),
 
   events: {
-    'click #invMgmt': 'inventory'
+    'click #invMgmt': 'inventory',
+    'click #btchMgmt': 'batch',
   },
 
   initialize: function() {
     this.render();
+    $('.breadcrumbs-two').remove();
+    
   },
 
   render: function() {
@@ -875,6 +972,8 @@ app.view.Home = Backbone.View.extend({
 
       // apply the button UI button style
       $('button').button();
+      
+      that.$el.removeClass('notable');
     });
   },
 
@@ -884,6 +983,13 @@ app.view.Home = Backbone.View.extend({
       trigger: true
     });
   },
+  
+  batch: function(e){
+    e.preventDefault();
+    app.router.inst.navigate('batch', {
+      trigger: true
+    });
+  }
 
 });
 app.view = app.view || {};
@@ -944,12 +1050,16 @@ app.view = app.view || {};
 app.view.Menu = Backbone.View.extend({
   template: 'menu',
   row: _.template('<li id="<%= id %>" class="current"><%= name %></li>'),
+  label: _.template('<div class="label"><h1><%= name %></h1></div>'),
   el: $('header'),
 
   events: {
     'click #home': 'home',
     'click #invMgmt': 'inventory',
-    'click #sources': 'sources'
+    'click #batch': 'batch',
+    'click #sources': 'sources',
+    'click #arrivals': 'arrivals',
+    'click #milk': 'milk'
   },
 
   initialize: function() {
@@ -971,19 +1081,22 @@ app.view.Menu = Backbone.View.extend({
   context: function(options) {
 
     // remove the current flag
-    $('.current').removeClass('current');
+    //$('.current').removeClass('current');
 
     // add the breadcrumb to the trail
-    $('.breadcrumbs-one').append(this.row(options));
+    if($('.label').length){
+      $('.label').remove();
+    }
+    
+    this.$el.append(this.label(options));        
   },
 
   home: function(e) {
     e.preventDefault();
 
-    var elm = $(e.currentTarget);
-
-    // remove breadcrumbs
-    elm.nextAll('li').remove();
+    // remove secondary row
+    $('.breadcrumbs-two').remove();
+    $('.label').remove();
 
     app.router.inst.navigate('', {
       trigger: true
@@ -993,29 +1106,78 @@ app.view.Menu = Backbone.View.extend({
   inventory: function(e) {
     e.preventDefault();
 
-    var elm = $(e.currentTarget);
+    var that = this;
 
-    // remove breadcrumbs    
-    elm.nextAll('li').remove();
-    elm.remove();
+    app.getTemplate('inventory', {}).done(function(_template) {
 
-    app.router.inst.navigate('inventory', {
+      if ($('.breadcrumbs-two').length) {
+        $('.breadcrumbs-two').html(_template);
+      } else {
+        that.$el.append(_template);
+      }
+    });
+
+    $('.label').remove();
+    app.router.inst.navigate("", {trigger: false, replace: true});
+    // app.router.inst.navigate('inventory', {
+    // trigger: true
+    // });
+  },
+
+  batch: function(e) {
+    e.preventDefault();
+
+    // remove secondary row
+    $('.breadcrumbs-two').remove();
+    $('.label').remove();
+    
+    app.router.inst.navigate('batch', {
       trigger: true
     });
   },
-  
-  sources: function(e){
+
+  sources: function(e) {
     e.preventDefault();
-    
+
     var elm = $(e.currentTarget);
-    
-    // remove breadcrumbs    
-    elm.nextAll('li').remove();
-    elm.remove();
-    
+
+    // remove breadcrumbs
+    // elm.nextAll('li').remove();
+    // elm.remove();
+
     app.router.inst.navigate('sources', {
       trigger: true
     });
+    
+    this.context({name: 'Sources'});
+  },
+
+  arrivals: function(e) {
+    e.preventDefault();
+
+    var that = this;
+
+    app.getTemplate('arrivals_menu', {}).done(function(_template) {
+
+      if ($('.breadcrumbs-two').length) {
+        $('.breadcrumbs-two').html(_template);
+      } else {
+        that.$el.append(_template);
+      }
+    });
+
+    app.router.inst.navigate('arrivals', {
+      trigger: true
+    });
+    
+    this.context({name: 'Arrivals'});
+  },
+
+  milk: function(e) {
+    app.router.inst.view.milk(e);
+    app.router.inst.navigate("milk", {trigger: false, replace: true});
+    
+    this.context({name: 'Milk'});
   }
 
 });
@@ -1026,70 +1188,182 @@ app.view.Milk = Backbone.View.extend({
   template: 'milk',
   el: $('#wrapper'),
   options: {},
+  model: null,
 
   events: {
-    'click #save': 'save',
-    'click #clear': 'clear'
+    'click #save_milk': 'save',
+    'click #update_milk': 'update',
+    'click #delete_milk': 'delete',
+    'click #clear_milk': 'clear'
   },
 
   initialize: function(options) {
-
-    this.options = options || {};
     
-    // render the page    
-    this.render();
+    var that = this;
+    
+    this.options = options || {};
+      
+    async.parallel({
+      milk: function(callback){
+        
+        if(options.id){        
+          that.model = new app.model.Arrival(options.id);
+          that.listenToOnce(that.model, 'change', function(resp){           
+            callback(null, resp);                    
+          });
+        } else {
+          callback(null, {attributes: {result: []}});            
+        }
+      },
+      sources: function(callback){
+        app.sources.fetch({
+          reset: true
+        });
+        that.listenToOnce(app.sources, 'reset', function(resp){          
+          callback(null, resp);          
+        });
+      }
+    }, function (err, results){
+      if(err){
+        console.log(err);          
+      } else {
+        that.render(results);
+      }
+    });            
   },
 
-  render: function() {
+  render: function(results) {
 
-    var that = this;
+    var that = this, data = [], attr, milkObj = {};
+    
+    debugger;
+    
+    if(results.milk && !!results.milk.attributes.result.length){
+      attr = results.milk.attributes.result.pop();
+            
+      milkObj.type = attr.type;
+      milkObj.source = attr.source_id;
+      milkObj.date = attr.arrival;
+      milkObj.temp = attr.temperature;
+      milkObj.amount = attr.amount;
+      milkObj.raw = attr.raw;
+      milkObj.price = attr.price;
+      milkObj.haccp = attr.haccp;
+      milkObj.initials = attr.initials;
+      milkObj.notes = attr.notes; 
+      milkObj.updated = true;
+    }
+    
+    results.sources.each(function(source, idx) {
+      var obj = {};
+
+      if (source.attributes.type == 1) {
+        
+        if(milkObj.source && milkObj.source == source.attributes.source_id){
+          obj.selected = true;
+        } else {
+          obj.selected = false;
+        }
+        
+        obj.value = source.attributes.source_id;
+        obj.key = source.attributes.name;
+        data.push(obj);
+      }
+    });    
 
     // display the template
-    app.getTemplate(this.template, {}).done(function(_template) {
-      
-      if(that.options.append){
+    app.getTemplate(this.template, {
+      objects: data,
+      data: milkObj
+    }).done(function(_template) {
+
+      if (that.options.append) {
         $(that.el).append(_template);
       } else {
         $(that.el).html(_template);
       }
-      
-      
-      
+
       // set our tooltips
       $(document).tooltip();
-      
+
       // set our button styles
       $('button').button();
-      
+
       // set our datetime picker
       $('#date').datetimepicker();
-      
+
+    });
+  },
+
+  clear: function(e) {
+    e.preventDefault();
+
+    // clear the inputs
+    $('input').val('');
+    $("input:checkbox").prop('checked', false);
+    $('select').val('select');    
+    $('textarea').val('');
+  },
+
+  save: function(e) {
+    e.preventDefault();
+
+    var input = {}, model;
+    
+    input.type = 1;
+    input.source = $('#source').val();
+    input.date = $('#date').val()
+    input.temperature = $('#temp').val();
+    input.amount = $('#amount').val();
+    input.raw = $('#raw').val();
+    input.price = $('#price').val();
+    input.haccp = $('#haccp').is(':checked') ? 1 : 0;
+    input.initials = $('#initials').val();    
+    input.notes = $('#notes').val();
+
+    model = app.arrivals.create(input, {
+      error: function(){
+        
+      },
+      success: function() {
+        
+      }
     });
   },
   
-  clear: function(e){
+  update: function(e){
     e.preventDefault();
     
-    //clear the inputs
-    $('input').val('');
-    $('select').val('select');
-    $('textarea').val('');
+    var that = this, input = {}, model;
+
+    input.type = 1;
+    input.source = $('#source').val();
+    input.date = $('#date').val()
+    input.temperature = $('#temp').val();
+    input.amount = $('#amount').val();
+    input.raw = $('#raw').val();
+    input.price = $('#price').val();
+    input.haccp = $('#haccp').is(':checked') ? 1 : 0;
+    input.initials = $('#initials').val();    
+    input.notes = $('#notes').val();
+
+    this.model.save(input, {
+      error: function() {
+        //some error handling here
+      },
+      success: function() {
+        //some event here for updating
+      }
+    });
+    
   },
   
-  save: function(e){
+  delete: function(e){
     e.preventDefault();
     
-    var input = {}, model;
-    
-    input.source = $('#source').val();
-    input.date = $('#date').val();
-    input.temp = $('#temp').val();
-    input.amount = $('#amount').val();    
-    input.notes = $('#notes').val();
-    
-    model = app.milks.create(input, {success:function(){
-      console.log(model);
-    }});
+    if (confirm('Are you sure you want to delete this arrival?  This operation cannot be undone')){
+      this.model.destroy();
+    }
   }
 });
 
@@ -1172,61 +1446,55 @@ app.view.Source = Backbone.View.extend({
   el: $('#wrapper'),
   options: {},
   source: null,
+  model: null,
 
   events: {
     'click #clear': 'clear',
     'click #save': 'save',
+    'click #delete': 'delete',
     'click #update': 'update',
     'keyup .autotab': 'jump',
   },
 
   initialize: function(options) {
 
-    this.options = options;
-
-    // render the page
-    this.render();
+    this.options = options || {};
+    
+    if(this.options.id){
+      this.model = new app.model.Source(options.id);
+      this.listenToOnce(this.model, 'change', this.render);
+    } else {
+      this.render({attributes:{result:[]}});      
+    }
   },
 
-  render: function() {
+  render: function(resp) {
 
-    var that = this;
+    var that = this, attr = resp.attributes;
 
-    if (this.options) {
-      this.source = new app.model.Source(this.options.id,
-              function(err, results) {
-                if (err) {
-                  console.log(err);
-                } else {
+    if (!!attr.result.length) {
 
-                  if (!!results.length) {
+      // get the object
+      var data = attr.result.pop();
 
-                    // get the object
-                    var data = results.pop();
+      data.update = true;
 
-                    data.update = true;
+      switch (data.type) {
+      case 1:
+        data.milk = true;
+        break;
+      }
 
-                    switch (data.type) {
-                    case 1:
-                      data.milk = true;
-                      break;
-                    }
-                    
-                    if(data.phone.length == 10){ 
-                      data.pstart = data.phone.substring(0,3);
-                      data.pmid = data.phone.substring(3,6);
-                      data.pend = data.phone.substring(6,10);
-                    } else {
-                      data.phone = false;
-                    }
+      if (data.phone.length == 10) {
+        data.pstart = data.phone.substring(0, 3);
+        data.pmid = data.phone.substring(3, 6);
+        data.pend = data.phone.substring(6, 10);
+      } else {
+        data.phone = false;
+      }
 
-                    that.display(data);
+      that.display(data);
 
-                  } else {
-                    that.display({});
-                  }
-                }
-              });
     } else {
       this.display({});
     }
@@ -1272,6 +1540,46 @@ app.view.Source = Backbone.View.extend({
   save: function(e) {
     e.preventDefault();
 
+    var that = this, input = {}, model, valid = true;
+
+    $.each($('.validate'), function(i,v){
+      if($(v).hasClass('invalid')){        
+        valid = false;
+        return false;
+      }
+      
+      if(v.attributes.hasOwnProperty('required') && !$(v).hasClass('valid') && $(v).val() == ""){
+        valid = false;
+        return false;
+      }
+    });
+    
+    if(valid){    
+      input.name = $('#name').val();
+      input.fullname = $('#cname').val();
+      input.source = $('#source').val();
+      input.phone = $('#phone_start').val() + $('#phone_mid').val()
+              + $('#phone_end').val();
+      input.email = $('#email').val();
+      input.address = $('#address').val();
+      input.notes = $('#notes').val();
+  
+      model = app.sources.create(input, {
+        error: function(){
+          //some event here for error
+        },
+        success: function() {
+          //some event here for save
+        }
+      });    
+    } else {
+      console.log('Errors in input');
+    }
+  },
+
+  update: function(e) {
+    e.preventDefault();
+
     var that = this, input = {}, model;
 
     input.name = $('#name').val();
@@ -1283,28 +1591,23 @@ app.view.Source = Backbone.View.extend({
     input.address = $('#address').val();
     input.notes = $('#notes').val();
 
-    model = app.sources.create(input, {
+    this.model.save(input, {
+      error: function() {
+        //some error handling here
+      },
       success: function() {
-        window.history.back();
+        //some event here for updating
       }
     });
   },
   
-  update: function(e){
+  delete: function(e){
     e.preventDefault();
     
-    var that = this, input = {}, model;
+    if (confirm('Are you sure you want to delete this source?  This operation cannot be undone')){
+      this.model.destroy();
+    }
     
-    input.name = $('#name').val();
-    input.fullname = $('#cname').val();
-    input.source = parseInt($('#source').val());
-    input.phone = $('#phone_start').val() + $('#phone_mid').val()
-            + $('#phone_end').val();
-    input.email = $('#email').val();
-    input.address = $('#address').val();
-    input.notes = $('#notes').val();
-   
-    this.source.save(input);
   }
 
 });
@@ -1326,7 +1629,7 @@ app.view.Sources = Backbone.View.extend({
     app.sources.fetch({
       reset: true
     });
-    this.listenTo(app.sources, 'reset', this.render);
+    this.listenToOnce(app.sources, 'reset', this.render);
   },
 
   render: function() {
@@ -1355,9 +1658,11 @@ app.view.Sources = Backbone.View.extend({
         'aaData': values,
         'aoColumns': columns
       });
-
+      
       // set our button styles
       $('button').button();
+      
+      that.$el.addClass('notable');
 
     });
   },
@@ -1624,6 +1929,8 @@ app.view.RennentModal = Backbone.View.extend({
 	
 	//TODO: async this up
 	app.sources = new app.collection.Sources;
+	app.arrivals = new app.collection.Arrivals;
+	app.milks = new app.collection.Milks;
 	//app.sources.fetch();
 	
 	//app.milks = new app.collection.Milks;
@@ -1645,4 +1952,82 @@ app.view.RennentModal = Backbone.View.extend({
 	
 	app.router.inst = new app.router.Router();
 	Backbone.history.start();	
+})();
+(function(){
+  
+  helper.process = function(el){
+    var attr_list = {}, input = el.val();
+    
+    $(el[0].attributes).each(function(){
+      attr_list[this.nodeName] = this.nodeValue;
+    });
+        
+    //if required, cannot be blank
+    if(attr_list.hasOwnProperty('required')){
+      if(input.length == 0){
+        return false;
+      }
+    }
+    
+    if(el.is('select')){
+      if(el.val() === 'select'){
+        return false;
+      }
+    } else {
+    
+      //if length required, make sure its that length
+      if(attr_list.size){
+        if(input.length != attr_list.size){
+          return false;
+        }
+      }
+      
+      switch(attr_list.type){
+        case 'email':
+          var regex = new RegExp("^[0-9a-zA-Z]+@[0-9a-zA-Z]+[\.]{1}[0-9a-zA-Z]+[\.]?[0-9a-zA-Z]+$");
+          if(!regex.test(input)){
+            return false;
+          }
+          break;
+        case 'number':
+        case 'phone':          
+          if(!$.isNumeric(input)){
+            return false;
+          }
+          break;
+        case 'checkbox':
+          if(!attr_list.hasOwnProperty('checked')){
+            return false;
+          }
+          break;
+        case 'datetime':
+          break;
+        case 'text':
+          break;
+      }
+    }
+    
+    return true;
+  };
+  
+  helper.listen = function(){
+    var that = this;
+    $('body').on('focusout', '.validate', function(e){
+      if(helper.process($(this))){
+        $(this).removeClass('invalid');
+        $(this).addClass('valid');
+      } else {
+        $(this).removeClass('valid');
+        $(this).addClass('invalid');
+      }
+    });
+    
+    $('#wrapper').on('focusin', '.validate', function(e){
+      $(this).removeClass('valid');
+      $(this).removeClass('invalid');
+    });
+  }
+  
+  helper.listen();
+  
 })();

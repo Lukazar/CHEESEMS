@@ -9,10 +9,14 @@ module.exports = {
 	 */
 	read: {
 		getAllMilksNotExpired: function(emitter, callback){
-			var connection = mysql.fetchConnection(), qstr, query, results = [];
+			var connection = mysql.fetchConnection(), qbuild = [], qstr, query, results = [];
 			
-			//TODO add expiration filter			
-			qstr = 'SELECT milk_id, name, creation_datetime, expiration_datetime, description FROM milks';			
+			//TODO add expiration filter		
+			qbuild.push('SELECT s.name, m.milk_id, m.source_id, m.arrival_id, m.amount, m.created, m.updated');
+			qbuild.push('FROM milks AS m');
+			qbuild.push('JOIN sources AS s ON s.source_id = m.source_id');			
+			qstr = qbuild.join(' ');			
+			
 			query = connection.query(qstr);	
 			
 			query.on('error', function(err){					
@@ -27,7 +31,29 @@ module.exports = {
 			});
 			
 			mysql.closeConnection(connection);				
-		},	
+		},
+		
+		getMilkByMilkID: function(milk_id, callback){
+      
+      var connection = mysql.fetchConnection(), qstr, qbuild = [];
+      
+      qbuild.push('SELECT s.name, m.milk_id, m.source_id, m.arrival_id, m.amount, m.created, m.updated');
+      qbuild.push('FROM milks AS m');
+      qbuild.push('JOIN sources AS s ON s.source_id = m.source_id');
+      qbuild.push('WHERE milk_id = ?');
+      
+      qstr = qbuild.join(' ');
+      
+      connection.query(qstr, [milk_id], function(err, results) {
+        if(err){
+          callback({success:false, error:err}, null);
+        } else {
+          callback(null, {success:true, result:results});
+        }
+      });
+      
+      mysql.closeConnection(connection);
+		},
 	},
 	
 	/*
@@ -49,6 +75,22 @@ module.exports = {
 			
 			mysql.closeConnection(connection);
 		},
+		
+		deleteMilkByArrivalID: function(arrival_id, callback){
+		  var connection = mysql.fetchConnection(), qstr, query;;
+      
+      qstr = 'DELETE FROM milks WHERE arrival_id = ?';
+      
+      query = connection.query(qstr, [arrival_id], function(err, result) {
+          if(err){
+            callback({success: false, error: err}, null);
+          } else {
+            callback(null, {success: true});
+          }
+      });
+      
+      mysql.closeConnection(connection);
+		}
 	},
 };
 

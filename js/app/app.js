@@ -22,6 +22,8 @@
 	
 	//TODO: async this up
 	app.sources = new app.collection.Sources;
+	app.arrivals = new app.collection.Arrivals;
+	app.milks = new app.collection.Milks;
 	//app.sources.fetch();
 	
 	//app.milks = new app.collection.Milks;

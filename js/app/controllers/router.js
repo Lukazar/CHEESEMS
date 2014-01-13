@@ -1,52 +1,107 @@
 app.router = app.router || {};
 
 app.router.Router = Backbone.Router.extend({
+  view: null,
   routes: {
-    '': 'home',    
+    '': 'home',
     'inventory': 'inventory',
     'sources': 'sources',
     'source': 'source',
-    'source/:id': 'source',    
-    'arrival': 'arrival',
+    'source/:id': 'source',
+    'arrivals': 'arrivals',
+    'batch': 'batch',
     'createBatch': 'createBatch',
-    'viewBatches': 'viewBatches'
+    'viewBatches': 'viewBatches',
+    '*path': 'home'
   },
 
   home: function() {
-    new app.view.Home();
+
+    if (this.view) {
+      this.destroyView();
+    }
+
+    this.view = new app.view.Home();
   },
 
   inventory: function() {
-    new app.view.Inventory();
-    
-    app.menu.context({id: 'invMgmt', name: 'Inventory Management'});
+
+    if (this.view) {
+      this.destroyView();
+    }
+
+    this.view = new app.view.Inventory();
+
+    //app.menu.context({
+    //  id: 'invMgmt',
+    //  name: 'Inventory Management'
+    //});
   },
-  
+
   sources: function() {
-    new app.view.Sources();
-    
-    app.menu.context({id: 'sources', name: 'Sources List'});
+
+    if (this.view) {
+      this.destroyView();
+    }
+
+    this.view = new app.view.Sources();
+
+    //app.menu.context({
+    //  id: 'sourcelist',
+    //  name: 'Sources List'
+    //});
   },
-  
-  source: function(source_id){
-    
+
+  source: function(source_id) {
+
+    if (this.view) {
+      this.destroyView();
+    }
+
     var name = 'Source';
-    
-    if(source_id){
-      new app.view.Source({id:source_id});
+
+    if (source_id) {
+      this.view = new app.view.Source({
+        id: source_id
+      });
       name = 'Edit ' + name;
     } else {
-      new app.view.Source();  
+      this.view = new app.view.Source();
       name = 'Add ' + name;
-    }        
-    
-    app.menu.context({id: 'source', name: 'Add Source'});
+    }
+
+    //app.menu.context({
+    //  id: 'addsource',
+    //  name: 'Add Source'
+    //});
   },
-  
-  arrival: function(){
-    new app.view.Arrival();
-    
-    app.menu.context({id: 'arrival', name: 'Arrivals'});
+
+  arrivals: function() {
+
+    if (this.view) {
+      this.destroyView();
+    }
+
+    this.view = new app.view.Arrivals();
+
+    //app.menu.context({
+    //  id: 'arrival',
+    //  name: 'Arrivals'
+    //});
+  },
+
+  batch: function() {
+
+    if (this.view) {
+      this.destroyView();
+    }
+
+    this.view = new app.view.Batch();
+
+    //app.menu.context({
+    //  id: 'batch',
+    //  name: 'Batch Creation'
+    //});
   },
 
   createBatch: function() {
@@ -55,5 +110,19 @@ app.router.Router = Backbone.Router.extend({
 
   viewBatches: function() {
     new app.BatchListingView();
+  },
+
+  destroyView: function() {
+
+    // COMPLETELY UNBIND THE VIEW
+    this.view.undelegateEvents();
+
+    $(this.view.el).removeData().unbind();
+
+    // Remove view from DOM
+    this.view.$el.children().remove()    
+
+    this.view = null;
+
   }
 });

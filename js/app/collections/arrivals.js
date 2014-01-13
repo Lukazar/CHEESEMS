@@ -1,8 +1,8 @@
 app.collection = app.collection || {};
 
-app.collection.Sources = Backbone.Collection.extend({
-  model: app.model.Source,
-  url: '/api/sources',
+app.collection.Arrivals = Backbone.Collection.extend({
+  model: app.model.Arrival,
+  url: '/api/arrivals',
   
   parse: function(resp){
     if(resp.success){     

@@ -34,8 +34,29 @@ module.exports = function(app) {
     });
   });
   
-  app.post('/api/sources/:source_id', function(req, resp){
+  /*app.post('/api/sources/:source_id', function(req, resp){
     
+    var params = {};
+    params.source_id = parseInt(req.params.source_id);
+    params.name = req.body.name;
+    params.fullname = req.body.fullname;
+    params.type = req.body.source;
+    params.address = req.body.address;
+    params.phone = req.body.phone;
+    params.email = req.body.email;
+    params.notes = req.body.notes;
+    
+    sources.write.updateSource(params, function(err, response){
+      if(err){
+        console.log('updateSource error:', err);
+      } else if(response.success) {        
+        resp.json(response);
+      }      
+    });    
+  });*/
+  
+  app.put('/api/sources/:source_id', function(req, resp){
+   
     var params = {};
     params.source_id = parseInt(req.params.source_id);
     params.name = req.body.name;
@@ -52,9 +73,7 @@ module.exports = function(app) {
       } else if(response.success) {
         resp.json(response);
       }      
-    })
-    
-    
+    });     
   });
 
   app.get('/api/sources', function(req, resp) {
@@ -86,5 +105,17 @@ module.exports = function(app) {
         resp.json(result);
       }
     });
+  });
+  
+  app.delete('/api/sources/:source_id', function(req, resp){
+    
+    sources.write.deleteSourceBySourceID(parseInt(req.params.source_id), function(err, result){
+      if(err){
+        console.log('deleteSourceBySourceID', e);
+      } else {
+        resp.json(result);
+      }
+    });
+    
   });
 };

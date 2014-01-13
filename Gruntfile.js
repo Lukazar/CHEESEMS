@@ -29,13 +29,14 @@ module.exports = function(grunt) {
                   'dist/<%= distName %>.js': ['js/core.js',
                       'js/app/controllers/*.js', 'js/app/models/*.js',
                       'js/app/collections/*.js', 'js/app/views/**/*.js',
-                      'js/app/app.js'],
+                      'js/app/app.js', 'js/app/helpers/*.js'],
                   'dist/plugins/libs.js': ['js/plugins/jquery/*.js',
                       'js/plugins/backbone/underscore*.js',
                       'js/plugins/backbone/backbone*.js',
-                      'js/plugins/handlebars/*.js'],
+                      'js/plugins/handlebars/*.js',
+                      'js/plugins/async/*.js'],
                   'dist/css/main.css': ['css/jquery-ui-1.10.3.custom.min.css',
-                      'css/main.css', 'css/form.css', 'css/menu.css']
+                      'css/main.css', 'css/form.css', 'css/tables.css', 'css/menu.css', 'css/cheese.css']
                 }
               }
             },

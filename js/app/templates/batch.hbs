@@ -1,0 +1,30 @@
+<div class="batch_form">
+	<h2> Batch Creation </h2>
+	<form id="contactform">
+		<div class="left">
+			<p class="contact">
+				<label for="date">Creation Time</label>
+			</p>
+			<input id="date" name="date" placeholder="Select Day" required tabindex="1" type="text">
+		</div>
+		<div class="right clear">
+			<p class="contact">
+				<label for="date">Volumes</label>
+			</p>
+			<input class="volumes" id="volumes-{{idx}}" name="date" placeholder="Set Volume" required tabindex="3" type="text" disabled>
+		</div>
+		<div class="right">
+			<div class="plus"></div>
+			<p class="contact">
+				<label for="date">Sources</label>
+			</p>
+			<input class="source" id="source-{{idx}}" name="date" placeholder="Select Source" required tabindex="2" type="text">
+		</div>
+		<div id="bottom" class="clear"></div>				
+		<ul id="cheeseBlock">
+		</ul>
+	</form>
+	<button id="add_cheese" title="Add a cheese creation block" tabindex="10">Add Cheese</button>
+	<button id="save" title="Save the source contact info" tabindex="11">Save</button>		
+	<button id="clear" title="Clear the form" tabindex="12">Clear</button>
+</div>

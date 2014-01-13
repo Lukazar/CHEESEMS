@@ -5,11 +5,14 @@ app.view.Home = Backbone.View.extend({
   el: $('#wrapper'),
 
   events: {
-    'click #invMgmt': 'inventory'
+    'click #invMgmt': 'inventory',
+    'click #btchMgmt': 'batch',
   },
 
   initialize: function() {
     this.render();
+    $('.breadcrumbs-two').remove();
+    
   },
 
   render: function() {
@@ -21,6 +24,8 @@ app.view.Home = Backbone.View.extend({
 
       // apply the button UI button style
       $('button').button();
+      
+      that.$el.removeClass('notable');
     });
   },
 
@@ -30,5 +35,12 @@ app.view.Home = Backbone.View.extend({
       trigger: true
     });
   },
+  
+  batch: function(e){
+    e.preventDefault();
+    app.router.inst.navigate('batch', {
+      trigger: true
+    });
+  }
 
 });

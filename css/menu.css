@@ -1,4 +1,4 @@
-.breadcrumbs-one{
+.breadcrumbs-one, .breadcrumbs-two{
   background: #eee;
   border-width: 1px;
   border-style: solid;
@@ -12,11 +12,11 @@
   list-style: none;
 }
 
-.breadcrumbs-one li{
+.breadcrumbs-one li, .breadcrumbs-two li{
   float: left;
 }
 
-.breadcrumbs-one li{
+.breadcrumbs-one li, .breadcrumbs-two li{
   padding: .7em 1em .7em 2em;
   float: left;
   text-decoration: none;
@@ -27,49 +27,72 @@
   background-image: linear-gradient(to right, #f5f5f5, #ddd);  
 }
 
-.breadcrumbs-one li:first-child{
+.breadcrumbs-one li:first-child, .breadcrumbs-two li:first-child{
   padding-left: 1em;
   border-radius: 5px 0 0 5px;
 }
 
-.breadcrumbs-one li:hover{
+.breadcrumbs-one li:hover, .breadcrumbs-two li:hover{
   background: #fff;
 }
 
 .breadcrumbs-one li::after,
-.breadcrumbs-one li::before{
+.breadcrumbs-one li::before,
+.breadcrumbs-two li::after,
+.breadcrumbs-two li::before{
   content: "";
   position: absolute;
   top: 50%;
-  margin-top: -1.5em;   
+  margin-top: -1.5em;     
   border-top: 1.5em solid transparent;
   border-bottom: 1.5em solid transparent;
-  border-left: 1em solid;
+  border-left: 1em solid;  
   right: -1em;
 }
 
-.breadcrumbs-one li::after{ 
+.breadcrumbs-one li::after, .breadcrumbs-two li::after{ 
   z-index: 2;
   border-left-color: #ddd;  
 }
 
-.breadcrumbs-one li::before{
+.breadcrumbs-one li::before, .breadcrumbs-two li::before{
   border-left-color: #ccc;  
   right: -1.1em;
   z-index: 1; 
 }
 
-.breadcrumbs-one li:hover::after{
+.breadcrumbs-one li:hover::after, .breadcrumbs-two li:hover::after{
   border-left-color: #fff;
 }
 
 .breadcrumbs-one .current,
-.breadcrumbs-one .current:hover{
+.breadcrumbs-one .current:hover,
+.breadcrumbs-two .current,
+.breadcrumbs-two .current:hover{
   font-weight: bold;
   background: none;
 }
 
 .breadcrumbs-one .current::after,
-.breadcrumbs-one .current::before{
+.breadcrumbs-one .current::before,
+.breadcrumbs-two .current::after,
+.breadcrumbs-two .current::before{
   content: normal;  
+}
+
+.label {
+background-color: white;
+box-sizing: border-box;
+padding: 0 12px;
+box-shadow: 0px 1px 2px rgba(0,0,0,.2);
+}
+
+.label h1 {
+padding: 14px 0;
+font-size: 1.2em;
+margin: 0 0 6px 0;
+color: #444;
+text-shadow: 0 1px 0;
+text-decoration: none;
+font-weight: normal;
 }

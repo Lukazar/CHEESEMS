@@ -9,7 +9,7 @@ app.model.Batch = Backbone.Model.extend({
 		
 	url: '/api/batches',
 	initialize: function(id){
-		if(typeof id !== 'undefined'){
+		if(typeof id !== 'undefined' && typeof id !== 'object'){
 			this.urlRoot = '/api/batches/' + id;			
 			return this.fetch();
 		}

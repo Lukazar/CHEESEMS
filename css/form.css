@@ -4,7 +4,11 @@ form {
 	text-align: left;
 }
 
-.form {
+.batch_form form {
+	text-align: center;
+}
+
+.form, .batch_form {
 	background: #f1f1f1;
 	width: 470px;
 	margin: 0 auto;
@@ -12,14 +16,40 @@ form {
 	padding-top: 20px;
 }
 
-.form p.contact {
+.batch_form .left {
+	float: left;
+	display: inline-block;
+}
+
+.batch_form .right {
+	float: right;
+	display: inline-block;	
+}
+
+.batch_form .right.clear {
+	clear: right;
+}
+
+#bottom.clear {
+	clear: both;
+}
+
+.clear {
+	clear:both;
+}
+
+.form p.contact, .batch_form p.contact {
 	font-size: 12px;
 	margin: 0 0 10px 0;
 	line-height: 14px;
 	font-family: Arial, Helvetica;	
 }
 
-.form label {
+.batch_form p.contact {
+	text-align: left;
+}
+
+.form label, .batch_form label {
 	color: #000;
 	font-weight: bold;
 	font-size: 12px;
@@ -30,6 +60,10 @@ form {
 	width: 400px;
 }
 
+.batch_form input[type="text"] {
+	width: 114px;
+}
+
 .form input#phone_start, input#phone_mid {
 	width: 30px;
 }
@@ -38,12 +72,16 @@ form {
 	width: 40px;
 }
 
+.form input#initials {
+	width: 45px;
+}
+
 .form textarea {
 	width: 400px;
 	height: 100px;
 }
 
-.form input, textarea {
+.form input, .form textarea, .batch_form input, .batch_form textarea {
 	background-color: rgba(255, 255, 255, 0.4);
 	border: 1px solid rgba(122, 192, 0, 0.15);
 	padding: 7px;
@@ -78,5 +116,54 @@ form {
 	padding-bottom: 5px;
 	text-overflow: ellipsis;
 	white-space: nowrap;	
+}
+
+.plus {
+  width: 10px;
+  height: 10px;
+  float:left;
+  position: relative;
+  margin:1px 16px 0 0px;
+  background-size:cover ;
+  -webkit-filter: drop-shadow(1px 0px 1px black);
+  -moz-filter: drop-shadow(4px 0px 1px black);
+  filter: drop-shadow(4px 0px 1px black);
+}
+
+.plus:before, .plus:after {
+  content: "";
+  position: absolute;
+  background: #27E683;
+  border-radius:15px;
+  
+}
+
+.plus:before {
+  left: 50%;
+  width: 30%;
+  margin-left: 28%;
+  height: 100%;
+  
+}
+
+.plus:after {
+  top: 50%;
+  height: 30%;
+  margin-top: -17%;
+  width: 100%;
+  
+}
+
+.validate.valid {
+	border:1px solid green;
+}
+
+.validate.invalid {
+	border:1px solid red;
+	background-color: rgba(255,0,0,.1);
+}
+
+.raw_align { 
+	margin: 0 0 0 100px;
 }
 
