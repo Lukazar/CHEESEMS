@@ -43,19 +43,32 @@ module.exports = function(app) {
               mparams.created = date;
               mparams.updated = date;
               
-              console.log('milks', mparams);
-              
               milks.write.addMilk(mparams, function(err, mresponse) {
+              
+                //maintain proper order for backbone implicit model sync
+                var ordered = {};
+                ordered.arrival_id = params.arrival_id;
+                ordered.source_id = params.source_id;
+                ordered.type = type;
+                ordered.arrival = params.arrival;
+                ordered.temperature = params.temperature;
+                ordered.amount = params.amount;
+                ordered.raw = params.raw;
+                ordered.price = params.price;
+                ordered.haccp = params.haccp;
+                ordered.initials = params.initials;
+                ordered.notes = params.notes;
+                ordered.created = params.created;
+                ordered.updated = params.updated;
                 
-                console.log('mresponse', mresponse);
                 
                   if(err) {
                     console.log('addMilk error ', err);
                   } else {
-                    if(mresponse.success){
+                    if(mresponse.success){                      
                       resp.json({
                         success: true,
-                        result: params,
+                        result: ordered,
                       });
                     }
                   }

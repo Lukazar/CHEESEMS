@@ -4,7 +4,8 @@ app.view.Milk = Backbone.View.extend({
 
   template: 'milk',
   el: $('#wrapper'),
-  options: {},
+  success: _.template('<div><p><span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span><%= message %></p><div>'),
+  options: {},  
   model: null,
 
   events: {
@@ -23,22 +24,41 @@ app.view.Milk = Backbone.View.extend({
     async.parallel({
       milk: function(callback){
         
-        if(options.id){        
-          that.model = new app.model.Arrival(options.id);
-          that.listenToOnce(that.model, 'change', function(resp){           
-            callback(null, resp);                    
-          });
+        if(options.id){ 
+          
+          if(app.arrivals){
+            that.model = app.arrivals.get(options.id);            
+            callback(null, that.model);
+          } else {
+            
+            app.arrivals = new app.collection.Arrivals;
+            app.arrivals.fetch({
+              reset: true
+            });
+            this.listenToOnce(app.arrivals, 'reset', function(collection){
+              that.model = collection.get(options.id);
+              callback(null, that.model);              
+            });        
+          }          
         } else {
           callback(null, {attributes: {result: []}});            
         }
       },
       sources: function(callback){
-        app.sources.fetch({
-          reset: true
-        });
-        that.listenToOnce(app.sources, 'reset', function(resp){          
-          callback(null, resp);          
-        });
+        if(!app.sources){
+          
+          app.sources = new app.collection.Sources;
+          
+          app.sources.fetch({
+            reset: true
+          });
+          that.listenToOnce(app.sources, 'reset', function(resp){          
+            callback(null, resp);          
+          });
+        } else {
+          callback(null, app.sources);
+        }
+        
       }
     }, function (err, results){
       if(err){
@@ -55,8 +75,8 @@ app.view.Milk = Backbone.View.extend({
     
     debugger;
     
-    if(results.milk && !!results.milk.attributes.result.length){
-      attr = results.milk.attributes.result.pop();
+    if(results.milk && results.milk.attributes.arrival_id){
+      attr = results.milk.attributes;
             
       milkObj.type = attr.type;
       milkObj.source = attr.source_id;
@@ -125,54 +145,158 @@ app.view.Milk = Backbone.View.extend({
   save: function(e) {
     e.preventDefault();
 
-    var input = {}, model;
+    var that = this, input = {}, model, valid = true, errors = [];
     
-    input.type = 1;
-    input.source = $('#source').val();
-    input.date = $('#date').val()
-    input.temperature = $('#temp').val();
-    input.amount = $('#amount').val();
-    input.raw = $('#raw').val();
-    input.price = $('#price').val();
-    input.haccp = $('#haccp').is(':checked') ? 1 : 0;
-    input.initials = $('#initials').val();    
-    input.notes = $('#notes').val();
-
-    model = app.arrivals.create(input, {
-      error: function(){
+    $.each($('.validate'), function(i,v){
+      if($(v).hasClass('invalid')){        
+        valid = false;
         
-      },
-      success: function() {
+        if($(v).attr('id') == 'source'){
+          errors.push('You must choose a source');
+        } else if($(v).attr('id') == 'haccp'){
+          errors.push('Please follow HACCP guidelines!');
+        } else {          
+          errors.push($("label[for='"+$(v).attr('name')+"']").html() + ' has invalid input');
+        }
         
+      } else if(v.attributes.hasOwnProperty('required') && !$(v).hasClass('valid') && $(v).val() == ""){        
+        valid = false;
+        
+        if($(v).attr('id') == 'source'){
+          errors.push('You must choose a source');
+        } else if($(v).attr('id') == 'haccp'){
+          errors.push('Please follow HACCP guidelines!');
+        } else {          
+          errors.push($("label[for='"+$(v).attr('name')+"']").html() + ' requires input');
+        }
       }
     });
+    
+    if(valid){
+    
+      input.type = 1;
+      input.source = $('#source').val();
+      input.date = $('#date').val()
+      input.temperature = $('#temp').val();
+      input.amount = $('#amount').val();
+      input.raw = $('#raw').val();
+      input.price = $('#price').val();
+      input.haccp = $('#haccp').is(':checked') ? 1 : 0;
+      input.initials = $('#initials').val();    
+      input.notes = $('#notes').val();
+  
+      model = app.arrivals.create(input, {
+        error: function(errorMsg){
+          new app.view.Errors({errors: ['Error saving the model: ' + errorMsg]});
+        },
+        success: function() {
+          $(that.success({message: 'Milk arrival has successfully been added...'})).dialog({
+            title: 'Addition Successful!',
+            modal: true,
+            width: 470,
+            show:{
+              effect: 'fold',
+              duration: 300
+            },
+            hide: {
+              effect: 'fold',
+              duration: 300
+            },
+            open: function(){
+              var self = this;
+              setTimeout(function(){
+                $(self).dialog('close');
+                $(self).remove();
+              }, 1500);              
+            },
+            close: function(){
+              app.router.inst.navigate("arrivals", {trigger: true, replace: true});
+            }            
+          }); 
+        },
+        wait: true
+      });
+    } else {
+      new app.view.Errors({errors: errors});
+    }
   },
   
   update: function(e){
     e.preventDefault();
     
-    var that = this, input = {}, model;
+    var that = this, input = {}, model, valid = true, errors = [];
 
-    input.type = 1;
-    input.source = $('#source').val();
-    input.date = $('#date').val()
-    input.temperature = $('#temp').val();
-    input.amount = $('#amount').val();
-    input.raw = $('#raw').val();
-    input.price = $('#price').val();
-    input.haccp = $('#haccp').is(':checked') ? 1 : 0;
-    input.initials = $('#initials').val();    
-    input.notes = $('#notes').val();
-
-    this.model.save(input, {
-      error: function() {
-        //some error handling here
-      },
-      success: function() {
-        //some event here for updating
+    $.each($('.validate'), function(i,v){
+      if($(v).hasClass('invalid')){        
+        valid = false;
+        
+        if($(v).attr('id') == 'source'){
+          errors.push('You must choose a source');
+        } else if($(v).attr('id') == 'haccp'){
+          errors.push('Please follow HACCP guidelines!');
+        } else {          
+          errors.push($("label[for='"+$(v).attr('name')+"']").html() + ' has invalid input');
+        }
+        
+      } else if(v.attributes.hasOwnProperty('required') && !$(v).hasClass('valid') && $(v).val() == ""){
+        valid = false;
+        
+        if($(v).attr('id') == 'source'){
+          errors.push('You must choose a source');
+        } else if($(v).attr('id') == 'haccp'){
+          errors.push('Please follow HACCP guidelines!');
+        } else {          
+          errors.push($("label[for='"+$(v).attr('name')+"']").html() + ' requires input');
+        }
       }
     });
     
+    if(valid){
+    
+      input.type = 1;
+      input.source = $('#source').val();
+      input.date = $('#date').val()
+      input.temperature = $('#temp').val();
+      input.amount = $('#amount').val();
+      input.raw = $('#raw').val();
+      input.price = $('#price').val();
+      input.haccp = $('#haccp').is(':checked') ? 1 : 0;
+      input.initials = $('#initials').val();    
+      input.notes = $('#notes').val();
+  
+      this.model.save(input, {
+        error: function(errorMsg) {
+          new app.view.Errors({errors: ['Error updating the model: ' + errorMsg]});
+        },
+        success: function() {
+          $(that.success({message: 'Milk arrival has successfully been updated...'})).dialog({
+            title: 'Update Successful!',
+            modal: true,
+            width: 470,
+            show:{
+              effect: 'fold',
+              duration: 300
+            },
+            hide: {
+              effect: 'fold',
+              duration: 300
+            },
+            open: function(){
+              var self = this;
+              setTimeout(function(){
+                $(self).dialog('close');
+                that.$success.remove();
+              }, 1500);              
+            },
+            close: function(){
+              window.history.back();
+            }
+          }); 
+        }
+      });    
+    } else {
+      new app.view.Errors({errors: errors});
+    }    
   },
   
   delete: function(e){

@@ -41,7 +41,7 @@
           }
           break;
         case 'checkbox':
-          if(!attr_list.hasOwnProperty('checked')){
+          if(!el.is(':checked')){
             return false;
           }
           break;
@@ -67,7 +67,17 @@
       }
     });
     
-    $('#wrapper').on('focusin', '.validate', function(e){
+    $('body').on('click', '.validate:checkbox', function(e){
+      if(helper.process($(this))){
+        $(this).removeClass('invalid');
+        $(this).addClass('valid');
+      } else {
+        $(this).removeClass('valid');
+        $(this).addClass('invalid');
+      }
+    });
+    
+    $('body').on('focusin', '.validate', function(e){
       $(this).removeClass('valid');
       $(this).removeClass('invalid');
     });

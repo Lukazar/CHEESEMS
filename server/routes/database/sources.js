@@ -24,36 +24,27 @@ module.exports = function(app) {
         if (response.success) {
           // add to the queue
           params.source_id = response.source_id;
-
+          
+          // need to redorder the attributes for backbone implicit model sync
+          var ordered = {};
+          ordered.source_id = params.source_id;
+          ordered.name = params.name;
+          ordered.fullname = params.fullname;
+          ordered.type = params.type;
+          ordered.phone = params.phone;
+          ordered.email = params.email;          
+          ordered.address = params.address;
+          ordered.notes = params.notes;
+          ordered.created = params.created;
+          
           resp.json({
             success: true,
-            result: params,
+            result: ordered,
           });
         }
       }
     });
   });
-  
-  /*app.post('/api/sources/:source_id', function(req, resp){
-    
-    var params = {};
-    params.source_id = parseInt(req.params.source_id);
-    params.name = req.body.name;
-    params.fullname = req.body.fullname;
-    params.type = req.body.source;
-    params.address = req.body.address;
-    params.phone = req.body.phone;
-    params.email = req.body.email;
-    params.notes = req.body.notes;
-    
-    sources.write.updateSource(params, function(err, response){
-      if(err){
-        console.log('updateSource error:', err);
-      } else if(response.success) {        
-        resp.json(response);
-      }      
-    });    
-  });*/
   
   app.put('/api/sources/:source_id', function(req, resp){
    

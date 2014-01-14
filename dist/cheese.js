@@ -1,4 +1,4 @@
-/*! cheese.js - v1.0.0 - 2014-01-12
+/*! cheese.js - v1.0.0 - 2014-01-14
 * http://lukejones.com/
 * Copyright (c) 2014 Luke Jones; Licensed MIT */
 var app = app || {};
@@ -134,7 +134,7 @@ app.router.Router = Backbone.Router.extend({
 app.model = app.model || {};
 
 app.model.Arrival = Backbone.Model.extend({  
-  idAttribute: 'result',
+  idAttribute: 'arrival_id',
 
   initialize: function(id) {
 
@@ -209,7 +209,7 @@ app.model.Culture = Backbone.Model.extend({
 app.model = app.model || {};
 
 app.model.Milk = Backbone.Model.extend({	
-	idAttribute: 'result',	
+	idAttribute: 'milk_id',	
 	
 	initialize: function(id) {
 
@@ -232,7 +232,7 @@ app.model = app.model || {};
 
 app.model.Source = Backbone.Model.extend({
   defaults: {},
-  idAttribute: 'result',
+  idAttribute: 'source_id',
 
   initialize: function(id) {
 
@@ -249,11 +249,20 @@ app.collection.Arrivals = Backbone.Collection.extend({
   url: '/api/arrivals',
   
   parse: function(resp){
-    if(resp.success){     
-      return resp.result; 
-    } else {
-      console.log('error with fetch sources collection');
-    }
+    
+    if(resp.hasOwnProperty('success')){
+      if(resp.success){     
+        return resp.result; 
+      } else {
+        console.log('error with fetch arrivals collection');
+      }
+    } else if(resp.hasOwnProperty('attributes')){
+      if(resp.attributes.success){     
+        return resp.attributes.result; 
+      } else {
+        console.log('error with fetch arrivals collection');
+      }
+    }    
   }
 })
 
@@ -354,11 +363,20 @@ app.collection.Sources = Backbone.Collection.extend({
   url: '/api/sources',
   
   parse: function(resp){
-    if(resp.success){     
-      return resp.result; 
-    } else {
-      console.log('error with fetch sources collection');
-    }
+    
+    if(resp.hasOwnProperty('success')){
+      if(resp.success){     
+        return resp.result; 
+      } else {
+        console.log('error with fetch sources collection');
+      }
+    } else if(resp.hasOwnProperty('attributes')){
+      if(resp.attributes.success){     
+        return resp.attributes.result; 
+      } else {
+        console.log('error with fetch sources collection');
+      }
+    }   
   }
 })
 
@@ -376,11 +394,16 @@ app.view.Arrivals = Backbone.View.extend({
   },
 
   initialize: function() {
-
-    app.arrivals.fetch({
-      reset: true
-    });
-    this.listenToOnce(app.arrivals, 'reset', this.render);
+    
+    if(!app.arrivals){
+      app.arrivals = new app.collection.Arrivals;
+      app.arrivals.fetch({
+        reset: true
+      });
+      this.listenToOnce(app.arrivals, 'reset', this.render);
+    } else {
+      this.render();
+    }     
   },
 
   render: function() {
@@ -390,12 +413,27 @@ app.view.Arrivals = Backbone.View.extend({
     app.arrivals.each(function(arrival, idx) {
       var row = [];
       $.each(arrival.attributes, function(i, v) {
-        if (idx == 0) {
-          columns.push({
-            "sTitle": i
-          });
+        
+        if( i != 'source_id' && i != 'haccp' && i != 'notes' && i != 'created') {
+          if (idx == 0 ) {
+            columns.push({
+              "sTitle": i
+            });
+          }
+          
+          if(i == 'arrival' || i == 'updated'){
+            var d = new Date(v);            
+            row.push(app.formatDate(d));             
+          } else if( i == 'type'){
+            switch(v){
+              case 1:
+                row.push('milk');
+                break;
+            }
+          } else {
+            row.push(v);
+          }          
         }
-        row.push(v);
       });
       values.push(row);
     });
@@ -443,10 +481,10 @@ app.view.Arrivals = Backbone.View.extend({
   edit: function(e){
     e.preventDefault();
     
-    var arrival_id = parseInt($(e.currentTarget).find('td').eq(0).html()), type = parseInt($(e.currentTarget).find('td').eq(2).html());
+    var arrival_id = parseInt($(e.currentTarget).find('td').eq(0).html()), type = $(e.currentTarget).find('td').eq(1).html();
     
     switch(type){
-      case 1:
+      case 'milk':
         this.milk(e, arrival_id);
         app.router.inst.navigate("milk", {trigger: false, replace: true});
         break;      
@@ -1118,7 +1156,7 @@ app.view.Menu = Backbone.View.extend({
     });
 
     $('.label').remove();
-    app.router.inst.navigate("", {trigger: false, replace: true});
+    app.router.inst.navigate("", {trigger: true, replace: true});
     // app.router.inst.navigate('inventory', {
     // trigger: true
     // });
@@ -1187,7 +1225,8 @@ app.view.Milk = Backbone.View.extend({
 
   template: 'milk',
   el: $('#wrapper'),
-  options: {},
+  success: _.template('<div><p><span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span><%= message %></p><div>'),
+  options: {},  
   model: null,
 
   events: {
@@ -1206,22 +1245,41 @@ app.view.Milk = Backbone.View.extend({
     async.parallel({
       milk: function(callback){
         
-        if(options.id){        
-          that.model = new app.model.Arrival(options.id);
-          that.listenToOnce(that.model, 'change', function(resp){           
-            callback(null, resp);                    
-          });
+        if(options.id){ 
+          
+          if(app.arrivals){
+            that.model = app.arrivals.get(options.id);            
+            callback(null, that.model);
+          } else {
+            
+            app.arrivals = new app.collection.Arrivals;
+            app.arrivals.fetch({
+              reset: true
+            });
+            this.listenToOnce(app.arrivals, 'reset', function(collection){
+              that.model = collection.get(options.id);
+              callback(null, that.model);              
+            });        
+          }          
         } else {
           callback(null, {attributes: {result: []}});            
         }
       },
       sources: function(callback){
-        app.sources.fetch({
-          reset: true
-        });
-        that.listenToOnce(app.sources, 'reset', function(resp){          
-          callback(null, resp);          
-        });
+        if(!app.sources){
+          
+          app.sources = new app.collection.Sources;
+          
+          app.sources.fetch({
+            reset: true
+          });
+          that.listenToOnce(app.sources, 'reset', function(resp){          
+            callback(null, resp);          
+          });
+        } else {
+          callback(null, app.sources);
+        }
+        
       }
     }, function (err, results){
       if(err){
@@ -1238,8 +1296,8 @@ app.view.Milk = Backbone.View.extend({
     
     debugger;
     
-    if(results.milk && !!results.milk.attributes.result.length){
-      attr = results.milk.attributes.result.pop();
+    if(results.milk && results.milk.attributes.arrival_id){
+      attr = results.milk.attributes;
             
       milkObj.type = attr.type;
       milkObj.source = attr.source_id;
@@ -1308,54 +1366,158 @@ app.view.Milk = Backbone.View.extend({
   save: function(e) {
     e.preventDefault();
 
-    var input = {}, model;
+    var that = this, input = {}, model, valid = true, errors = [];
     
-    input.type = 1;
-    input.source = $('#source').val();
-    input.date = $('#date').val()
-    input.temperature = $('#temp').val();
-    input.amount = $('#amount').val();
-    input.raw = $('#raw').val();
-    input.price = $('#price').val();
-    input.haccp = $('#haccp').is(':checked') ? 1 : 0;
-    input.initials = $('#initials').val();    
-    input.notes = $('#notes').val();
-
-    model = app.arrivals.create(input, {
-      error: function(){
+    $.each($('.validate'), function(i,v){
+      if($(v).hasClass('invalid')){        
+        valid = false;
         
-      },
-      success: function() {
+        if($(v).attr('id') == 'source'){
+          errors.push('You must choose a source');
+        } else if($(v).attr('id') == 'haccp'){
+          errors.push('Please follow HACCP guidelines!');
+        } else {          
+          errors.push($("label[for='"+$(v).attr('name')+"']").html() + ' has invalid input');
+        }
         
+      } else if(v.attributes.hasOwnProperty('required') && !$(v).hasClass('valid') && $(v).val() == ""){        
+        valid = false;
+        
+        if($(v).attr('id') == 'source'){
+          errors.push('You must choose a source');
+        } else if($(v).attr('id') == 'haccp'){
+          errors.push('Please follow HACCP guidelines!');
+        } else {          
+          errors.push($("label[for='"+$(v).attr('name')+"']").html() + ' requires input');
+        }
       }
     });
+    
+    if(valid){
+    
+      input.type = 1;
+      input.source = $('#source').val();
+      input.date = $('#date').val()
+      input.temperature = $('#temp').val();
+      input.amount = $('#amount').val();
+      input.raw = $('#raw').val();
+      input.price = $('#price').val();
+      input.haccp = $('#haccp').is(':checked') ? 1 : 0;
+      input.initials = $('#initials').val();    
+      input.notes = $('#notes').val();
+  
+      model = app.arrivals.create(input, {
+        error: function(errorMsg){
+          new app.view.Errors({errors: ['Error saving the model: ' + errorMsg]});
+        },
+        success: function() {
+          $(that.success({message: 'Milk arrival has successfully been added...'})).dialog({
+            title: 'Addition Successful!',
+            modal: true,
+            width: 470,
+            show:{
+              effect: 'fold',
+              duration: 300
+            },
+            hide: {
+              effect: 'fold',
+              duration: 300
+            },
+            open: function(){
+              var self = this;
+              setTimeout(function(){
+                $(self).dialog('close');
+                $(self).remove();
+              }, 1500);              
+            },
+            close: function(){
+              app.router.inst.navigate("arrivals", {trigger: true, replace: true});
+            }            
+          }); 
+        },
+        wait: true
+      });
+    } else {
+      new app.view.Errors({errors: errors});
+    }
   },
   
   update: function(e){
     e.preventDefault();
     
-    var that = this, input = {}, model;
+    var that = this, input = {}, model, valid = true, errors = [];
 
-    input.type = 1;
-    input.source = $('#source').val();
-    input.date = $('#date').val()
-    input.temperature = $('#temp').val();
-    input.amount = $('#amount').val();
-    input.raw = $('#raw').val();
-    input.price = $('#price').val();
-    input.haccp = $('#haccp').is(':checked') ? 1 : 0;
-    input.initials = $('#initials').val();    
-    input.notes = $('#notes').val();
-
-    this.model.save(input, {
-      error: function() {
-        //some error handling here
-      },
-      success: function() {
-        //some event here for updating
+    $.each($('.validate'), function(i,v){
+      if($(v).hasClass('invalid')){        
+        valid = false;
+        
+        if($(v).attr('id') == 'source'){
+          errors.push('You must choose a source');
+        } else if($(v).attr('id') == 'haccp'){
+          errors.push('Please follow HACCP guidelines!');
+        } else {          
+          errors.push($("label[for='"+$(v).attr('name')+"']").html() + ' has invalid input');
+        }
+        
+      } else if(v.attributes.hasOwnProperty('required') && !$(v).hasClass('valid') && $(v).val() == ""){
+        valid = false;
+        
+        if($(v).attr('id') == 'source'){
+          errors.push('You must choose a source');
+        } else if($(v).attr('id') == 'haccp'){
+          errors.push('Please follow HACCP guidelines!');
+        } else {          
+          errors.push($("label[for='"+$(v).attr('name')+"']").html() + ' requires input');
+        }
       }
     });
     
+    if(valid){
+    
+      input.type = 1;
+      input.source = $('#source').val();
+      input.date = $('#date').val()
+      input.temperature = $('#temp').val();
+      input.amount = $('#amount').val();
+      input.raw = $('#raw').val();
+      input.price = $('#price').val();
+      input.haccp = $('#haccp').is(':checked') ? 1 : 0;
+      input.initials = $('#initials').val();    
+      input.notes = $('#notes').val();
+  
+      this.model.save(input, {
+        error: function(errorMsg) {
+          new app.view.Errors({errors: ['Error updating the model: ' + errorMsg]});
+        },
+        success: function() {
+          $(that.success({message: 'Milk arrival has successfully been updated...'})).dialog({
+            title: 'Update Successful!',
+            modal: true,
+            width: 470,
+            show:{
+              effect: 'fold',
+              duration: 300
+            },
+            hide: {
+              effect: 'fold',
+              duration: 300
+            },
+            open: function(){
+              var self = this;
+              setTimeout(function(){
+                $(self).dialog('close');
+                that.$success.remove();
+              }, 1500);              
+            },
+            close: function(){
+              window.history.back();
+            }
+          }); 
+        }
+      });    
+    } else {
+      new app.view.Errors({errors: errors});
+    }    
   },
   
   delete: function(e){
@@ -1444,6 +1606,7 @@ app.view.Source = Backbone.View.extend({
 
   template: 'source',
   el: $('#wrapper'),
+  success: _.template('<div><p><span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span><%= message %></p><div>'),
   options: {},
   source: null,
   model: null,
@@ -1457,12 +1620,27 @@ app.view.Source = Backbone.View.extend({
   },
 
   initialize: function(options) {
-
+    
+    var that = this;
+    
     this.options = options || {};
     
     if(this.options.id){
-      this.model = new app.model.Source(options.id);
-      this.listenToOnce(this.model, 'change', this.render);
+      
+      if(app.sources){
+        this.model = app.sources.get(options.id);
+        this.render(this.model);
+      } else {
+        
+        app.sources = new app.collection.Sources;
+        app.sources.fetch({
+          reset: true
+        });
+        this.listenToOnce(app.sources, 'reset', function(collection){
+          that.model = collection.get(options.id);
+          that.render(that.model);
+        });        
+      }      
     } else {
       this.render({attributes:{result:[]}});      
     }
@@ -1472,10 +1650,10 @@ app.view.Source = Backbone.View.extend({
 
     var that = this, attr = resp.attributes;
 
-    if (!!attr.result.length) {
+    if (attr.source_id) {
 
       // get the object
-      var data = attr.result.pop();
+      var data = attr;
 
       data.update = true;
 
@@ -1540,17 +1718,29 @@ app.view.Source = Backbone.View.extend({
   save: function(e) {
     e.preventDefault();
 
-    var that = this, input = {}, model, valid = true;
+    var that = this, input = {}, model, valid = true, errors = [];
 
     $.each($('.validate'), function(i,v){
       if($(v).hasClass('invalid')){        
         valid = false;
-        return false;
-      }
-      
-      if(v.attributes.hasOwnProperty('required') && !$(v).hasClass('valid') && $(v).val() == ""){
+        
+        if($(v).attr('id') == 'source'){
+          errors.push('You must choose a source');
+        } else if($(v).attr('id').indexOf('phone') !== -1){
+          errors.push('Invalid characters in the phone number');
+        } else {          
+          errors.push($("label[for='"+$(v).attr('name')+"']").html() + ' has invalid input');
+        }
+      } else if(v.attributes.hasOwnProperty('required') && !$(v).hasClass('valid') && $(v).val() == ""){
         valid = false;
-        return false;
+        
+        if($(v).attr('id') == 'source'){
+          errors.push('You must choose a source');
+        } else if($(v).attr('id').indexOf('phone') !== -1){
+          errors.push('Phone number requires input');
+        } else {
+          errors.push($("label[for='"+$(v).attr('name')+"']").html() + ' requires input');
+        }        
       }
     });
     
@@ -1565,40 +1755,114 @@ app.view.Source = Backbone.View.extend({
       input.notes = $('#notes').val();
   
       model = app.sources.create(input, {
-        error: function(){
-          //some event here for error
+        error: function(errorMsg){
+          new app.view.Errors({errors: ['Error saving the model: ' + errorMsg]});
         },
         success: function() {
-          //some event here for save
-        }
-      });    
+          $(that.success({message: 'Source has successfully been added...'})).dialog({
+            title: 'Addition Successful!',
+            modal: true,
+            width: 470,
+            show:{
+              effect: 'fold',
+              duration: 300
+            },
+            hide: {
+              effect: 'fold',
+              duration: 300
+            },
+            open: function(){
+              var self = this;
+              
+              setTimeout(function(){
+                $(self).dialog('close');
+                $(self).remove();
+              }, 1500);              
+            },
+            close: function(){
+              window.history.back();
+            }
+          });          
+        },
+        wait: true
+      });      
     } else {
-      console.log('Errors in input');
+      new app.view.Errors({errors: errors});
     }
   },
 
   update: function(e) {
     e.preventDefault();
 
-    var that = this, input = {}, model;
-
-    input.name = $('#name').val();
-    input.fullname = $('#cname').val();
-    input.source = parseInt($('#source').val());
-    input.phone = $('#phone_start').val() + $('#phone_mid').val()
-            + $('#phone_end').val();
-    input.email = $('#email').val();
-    input.address = $('#address').val();
-    input.notes = $('#notes').val();
-
-    this.model.save(input, {
-      error: function() {
-        //some error handling here
-      },
-      success: function() {
-        //some event here for updating
+    var that = this, input = {}, model, valid = true, errors = [];
+    
+    $.each($('.validate'), function(i,v){
+      if($(v).hasClass('invalid')){        
+        valid = false;
+        
+        if($(v).attr('id') == 'source'){
+          errors.push('You must choose a source');
+        } else if($(v).attr('id').indexOf('phone') !== -1){
+          errors.push('Invalid characters in the phone number');
+        } else {
+          errors.push($("label[for='"+$(v).attr('name')+"']").html() + ' has invalid input');
+        }        
+      } else if(v.attributes.hasOwnProperty('required') && !$(v).hasClass('valid') && $(v).val() == ""){
+        valid = false;
+        
+        if($(v).attr('id') == 'source'){
+          errors.push('You must choose a source');
+        } else if($(v).attr('id').indexOf('phone') !== -1){
+          errors.push('Phone number requires input');
+        } else {
+          errors.push($("label[for='"+$(v).attr('name')+"']").html() + ' requires input');
+        }        
       }
     });
+    
+    if(valid){
+      input.name = $('#name').val();
+      input.fullname = $('#cname').val();
+      input.source = parseInt($('#source').val());
+      input.phone = $('#phone_start').val() + $('#phone_mid').val()
+              + $('#phone_end').val();
+      input.email = $('#email').val();
+      input.address = $('#address').val();
+      input.notes = $('#notes').val();
+  
+      this.model.save(input, {
+        error: function() {
+          new app.view.Errors({errors: ['Error updating the model: ' + errorMsg]});
+        },
+        success: function() {
+          $(that.success({message: 'Source has successfully been updated...'})).dialog({
+            title: 'Update Successful!',
+            modal: true,
+            width: 470,
+            show:{
+              effect: 'fold',
+              duration: 300
+            },
+            hide: {
+              effect: 'fold',
+              duration: 300
+            },
+            open: function(){
+              var self = this;
+              setTimeout(function(){
+                $(self).dialog('close');
+                that.$success.remove();
+              }, 1500);              
+            },
+            close: function(){
+              window.history.back();
+            }
+          });
+        }
+      });
+    } else {
+      new app.view.Errors({errors: errors});
+    }
   },
   
   delete: function(e){
@@ -1606,6 +1870,7 @@ app.view.Source = Backbone.View.extend({
     
     if (confirm('Are you sure you want to delete this source?  This operation cannot be undone')){
       this.model.destroy();
+      window.history.back();
     }
     
   }
@@ -1625,11 +1890,16 @@ app.view.Sources = Backbone.View.extend({
   },
 
   initialize: function() {
-
-    app.sources.fetch({
-      reset: true
-    });
-    this.listenToOnce(app.sources, 'reset', this.render);
+    
+    if(!app.sources){
+      app.sources = new app.collection.Sources;
+      app.sources.fetch({
+        reset: true
+      });
+      this.listenToOnce(app.sources, 'reset', this.render);
+    } else {
+      this.render();
+    }    
   },
 
   render: function() {
@@ -1639,12 +1909,25 @@ app.view.Sources = Backbone.View.extend({
     app.sources.each(function(source, idx) {
       var row = [];
       $.each(source.attributes, function(i, v) {
-        if (idx == 0) {
-          columns.push({
-            "sTitle": i
-          });
+        
+        if( i != 'address' && i != 'notes' && i != 'created') {
+        
+          if (idx == 0) {
+            columns.push({
+              "sTitle": i
+            });
+          }
+          
+          if( i == 'type'){
+            switch(parseInt(v)){
+              case 1:
+                row.push('milk');
+                break;
+            }
+          } else {          
+            row.push(v);
+          }
         }
-        row.push(v);
       });
       values.push(row);
     });
@@ -1907,6 +2190,11 @@ app.view.RennentModal = Backbone.View.extend({
 });
 (function(){
 	
+  Number.prototype.padLeft = function(base,chr){
+    var  len = (String(base || 10).length - String(this).length)+1;
+    return len > 0? new Array(len).join(chr || '0')+this : this;
+  }
+  
 	app.getDate = function(date){
 		
 		date = date.getUTCFullYear() + '-' +
@@ -1919,6 +2207,17 @@ app.view.RennentModal = Backbone.View.extend({
 		return date;
 	};
 	
+	app.formatDate = function(date){
+	  var dformat = [date.getDate().padLeft(),
+	                 (date.getMonth()+1).padLeft(),
+	                 date.getFullYear()].join('/')+
+	                 ' ' +
+	                 [date.getHours().padLeft(),
+	                  date.getMinutes().padLeft()].join(':');
+	  
+	  return dformat;
+	}
+	
 	app.getTemplate = function(name, data) {
     	return $.get('js/app/templates/' + name + '.hbs').then(function(src) {
        		return Handlebars.compile(src)(data);
@@ -1928,9 +2227,9 @@ app.view.RennentModal = Backbone.View.extend({
 	};
 	
 	//TODO: async this up
-	app.sources = new app.collection.Sources;
-	app.arrivals = new app.collection.Arrivals;
-	app.milks = new app.collection.Milks;
+	app.sources = null; //new app.collection.Sources;
+	app.arrivals = null; //new app.collection.Arrivals;
+	app.milks = null; //new app.collection.Milks;
 	//app.sources.fetch();
 	
 	//app.milks = new app.collection.Milks;
@@ -1953,6 +2252,60 @@ app.view.RennentModal = Backbone.View.extend({
 	app.router.inst = new app.router.Router();
 	Backbone.history.start();	
 })();
+app.view = app.view || {};
+
+app.view.Errors = Backbone.View.extend({
+
+  template: 'errors',
+  tagName: 'div',
+  id: 'errors',
+  options: {},
+
+  events: {
+  },
+
+  initialize: function(options) {
+    
+    if(options.errors){
+      this.render(options.errors);
+    } else {
+      this.render({});
+    }   
+  },
+
+  render: function(results) {
+    
+    var that = this;
+    
+    app.getTemplate(this.template, {errors: results}).done(function(_template) {
+                 
+      that.$el.html(_template).prependTo('body');
+      
+      // apply the button UI button style
+      that.$el.dialog({
+        title: 'Errors on Page',
+        modal: true,
+        resizable: true,
+        width: 470,
+        show:{
+          effect: 'fold',
+          duration: 300
+        },
+        hide: {
+          effect: 'fold',
+          duration: 300
+        },
+        buttons: {
+          Close: function(){
+            $(this).dialog('close');
+            this.remove();            
+          }
+        }
+      });
+    });    
+  }
+});
+
 (function(){
   
   helper.process = function(el){
@@ -1996,7 +2349,7 @@ app.view.RennentModal = Backbone.View.extend({
           }
           break;
         case 'checkbox':
-          if(!attr_list.hasOwnProperty('checked')){
+          if(!el.is(':checked')){
             return false;
           }
           break;
@@ -2022,7 +2375,17 @@ app.view.RennentModal = Backbone.View.extend({
       }
     });
     
-    $('#wrapper').on('focusin', '.validate', function(e){
+    $('body').on('click', '.validate:checkbox', function(e){
+      if(helper.process($(this))){
+        $(this).removeClass('invalid');
+        $(this).addClass('valid');
+      } else {
+        $(this).removeClass('valid');
+        $(this).addClass('invalid');
+      }
+    });
+    
+    $('body').on('focusin', '.validate', function(e){
       $(this).removeClass('valid');
       $(this).removeClass('invalid');
     });

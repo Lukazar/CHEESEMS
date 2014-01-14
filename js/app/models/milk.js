@@ -1,7 +1,7 @@
 app.model = app.model || {};
 
 app.model.Milk = Backbone.Model.extend({	
-	idAttribute: 'result',	
+	idAttribute: 'milk_id',	
 	
 	initialize: function(id) {
 

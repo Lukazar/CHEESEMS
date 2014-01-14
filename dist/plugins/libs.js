@@ -1,4 +1,4 @@
-/*! cheese.js - v1.0.0 - 2014-01-12
+/*! cheese.js - v1.0.0 - 2014-01-14
 * http://lukejones.com/
 * Copyright (c) 2014 Luke Jones; Licensed MIT */
 /*! jQuery v1.10.2 | (c) 2005, 2013 jQuery Foundation, Inc. | jquery.org/license

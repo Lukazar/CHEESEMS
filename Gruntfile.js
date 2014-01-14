@@ -36,7 +36,7 @@ module.exports = function(grunt) {
                       'js/plugins/handlebars/*.js',
                       'js/plugins/async/*.js'],
                   'dist/css/main.css': ['css/jquery-ui-1.10.3.custom.min.css',
-                      'css/main.css', 'css/form.css', 'css/tables.css', 'css/menu.css', 'css/cheese.css']
+                      'css/main.css', 'css/form.css', 'css/tables.css', 'css/menu.css', 'css/cheese.css', 'css/errors.css']
                 }
               }
             },

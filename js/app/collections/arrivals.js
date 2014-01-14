@@ -5,10 +5,19 @@ app.collection.Arrivals = Backbone.Collection.extend({
   url: '/api/arrivals',
   
   parse: function(resp){
-    if(resp.success){     
-      return resp.result; 
-    } else {
-      console.log('error with fetch sources collection');
-    }
+    
+    if(resp.hasOwnProperty('success')){
+      if(resp.success){     
+        return resp.result; 
+      } else {
+        console.log('error with fetch arrivals collection');
+      }
+    } else if(resp.hasOwnProperty('attributes')){
+      if(resp.attributes.success){     
+        return resp.attributes.result; 
+      } else {
+        console.log('error with fetch arrivals collection');
+      }
+    }    
   }
 })

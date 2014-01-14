@@ -1,5 +1,10 @@
 (function(){
 	
+  Number.prototype.padLeft = function(base,chr){
+    var  len = (String(base || 10).length - String(this).length)+1;
+    return len > 0? new Array(len).join(chr || '0')+this : this;
+  }
+  
 	app.getDate = function(date){
 		
 		date = date.getUTCFullYear() + '-' +
@@ -12,6 +17,17 @@
 		return date;
 	};
 	
+	app.formatDate = function(date){
+	  var dformat = [date.getDate().padLeft(),
+	                 (date.getMonth()+1).padLeft(),
+	                 date.getFullYear()].join('/')+
+	                 ' ' +
+	                 [date.getHours().padLeft(),
+	                  date.getMinutes().padLeft()].join(':');
+	  
+	  return dformat;
+	}
+	
 	app.getTemplate = function(name, data) {
     	return $.get('js/app/templates/' + name + '.hbs').then(function(src) {
        		return Handlebars.compile(src)(data);
@@ -21,9 +37,9 @@
 	};
 	
 	//TODO: async this up
-	app.sources = new app.collection.Sources;
-	app.arrivals = new app.collection.Arrivals;
-	app.milks = new app.collection.Milks;
+	app.sources = null; //new app.collection.Sources;
+	app.arrivals = null; //new app.collection.Arrivals;
+	app.milks = null; //new app.collection.Milks;
 	//app.sources.fetch();
 	
 	//app.milks = new app.collection.Milks;

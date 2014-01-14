@@ -1,4 +1,4 @@
-/*! cheese.js - v1.0.0 - 2014-01-12
+/*! cheese.js - v1.0.0 - 2014-01-14
 * http://lukejones.com/
 * Copyright (c) 2014 Luke Jones; Licensed MIT */
 /*! jQuery UI - v1.10.3 - 2013-09-14
@@ -791,4 +791,7 @@ font-weight: normal;
 
 #cheeseBlock .cheeseSource {
 	width: 70px;
+}
+#errors li {
+	color: red;
 }

@@ -12,11 +12,16 @@ app.view.Arrivals = Backbone.View.extend({
   },
 
   initialize: function() {
-
-    app.arrivals.fetch({
-      reset: true
-    });
-    this.listenToOnce(app.arrivals, 'reset', this.render);
+    
+    if(!app.arrivals){
+      app.arrivals = new app.collection.Arrivals;
+      app.arrivals.fetch({
+        reset: true
+      });
+      this.listenToOnce(app.arrivals, 'reset', this.render);
+    } else {
+      this.render();
+    }     
   },
 
   render: function() {
@@ -26,12 +31,27 @@ app.view.Arrivals = Backbone.View.extend({
     app.arrivals.each(function(arrival, idx) {
       var row = [];
       $.each(arrival.attributes, function(i, v) {
-        if (idx == 0) {
-          columns.push({
-            "sTitle": i
-          });
+        
+        if( i != 'source_id' && i != 'haccp' && i != 'notes' && i != 'created') {
+          if (idx == 0 ) {
+            columns.push({
+              "sTitle": i
+            });
+          }
+          
+          if(i == 'arrival' || i == 'updated'){
+            var d = new Date(v);            
+            row.push(app.formatDate(d));             
+          } else if( i == 'type'){
+            switch(v){
+              case 1:
+                row.push('milk');
+                break;
+            }
+          } else {
+            row.push(v);
+          }          
         }
-        row.push(v);
       });
       values.push(row);
     });
@@ -79,10 +99,10 @@ app.view.Arrivals = Backbone.View.extend({
   edit: function(e){
     e.preventDefault();
     
-    var arrival_id = parseInt($(e.currentTarget).find('td').eq(0).html()), type = parseInt($(e.currentTarget).find('td').eq(2).html());
+    var arrival_id = parseInt($(e.currentTarget).find('td').eq(0).html()), type = $(e.currentTarget).find('td').eq(1).html();
     
     switch(type){
-      case 1:
+      case 'milk':
         this.milk(e, arrival_id);
         app.router.inst.navigate("milk", {trigger: false, replace: true});
         break;      

@@ -11,11 +11,16 @@ app.view.Sources = Backbone.View.extend({
   },
 
   initialize: function() {
-
-    app.sources.fetch({
-      reset: true
-    });
-    this.listenToOnce(app.sources, 'reset', this.render);
+    
+    if(!app.sources){
+      app.sources = new app.collection.Sources;
+      app.sources.fetch({
+        reset: true
+      });
+      this.listenToOnce(app.sources, 'reset', this.render);
+    } else {
+      this.render();
+    }    
   },
 
   render: function() {
@@ -25,12 +30,25 @@ app.view.Sources = Backbone.View.extend({
     app.sources.each(function(source, idx) {
       var row = [];
       $.each(source.attributes, function(i, v) {
-        if (idx == 0) {
-          columns.push({
-            "sTitle": i
-          });
+        
+        if( i != 'address' && i != 'notes' && i != 'created') {
+        
+          if (idx == 0) {
+            columns.push({
+              "sTitle": i
+            });
+          }
+          
+          if( i == 'type'){
+            switch(parseInt(v)){
+              case 1:
+                row.push('milk');
+                break;
+            }
+          } else {          
+            row.push(v);
+          }
         }
-        row.push(v);
       });
       values.push(row);
     });

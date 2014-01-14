@@ -71,7 +71,7 @@ app.view.Menu = Backbone.View.extend({
     });
 
     $('.label').remove();
-    app.router.inst.navigate("", {trigger: false, replace: true});
+    app.router.inst.navigate("", {trigger: true, replace: true});
     // app.router.inst.navigate('inventory', {
     // trigger: true
     // });

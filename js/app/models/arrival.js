@@ -1,7 +1,7 @@
 app.model = app.model || {};
 
 app.model.Arrival = Backbone.Model.extend({  
-  idAttribute: 'result',
+  idAttribute: 'arrival_id',
 
   initialize: function(id) {
 

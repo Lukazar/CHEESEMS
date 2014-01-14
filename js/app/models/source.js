@@ -2,7 +2,7 @@ app.model = app.model || {};
 
 app.model.Source = Backbone.Model.extend({
   defaults: {},
-  idAttribute: 'result',
+  idAttribute: 'source_id',
 
   initialize: function(id) {
 
